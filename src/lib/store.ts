@@ -111,18 +111,18 @@ export const DEFAULT_WATCHLIST: WatchlistItem[] = [
 export const getTrackSureVideoUrl = (camId: string): string => {
   const normalized = camId.toUpperCase();
   if (normalized.includes("CAM-001") || normalized.includes("CAM-1") || normalized.includes("A")) {
-    return "/videos/cam1_cfr.mp4";
+    return "/videos/cam1_tracked.mp4";
   }
   if (normalized.includes("CAM-002") || normalized.includes("CAM-2") || normalized.includes("B")) {
-    return "/videos/cam2_cfr.mp4";
+    return "/videos/cam2_tracked.mp4";
   }
   if (normalized.includes("CAM-003") || normalized.includes("CAM-3") || normalized.includes("C")) {
-    return "/videos/cam3_cfr.mp4";
+    return "/videos/cam3_tracked.mp4";
   }
   if (normalized.includes("CAM-004") || normalized.includes("CAM-4") || normalized.includes("D")) {
-    return "/videos/cam4_cfr.mp4";
+    return "/videos/cam4_tracked.mp4";
   }
-  return "/videos/cam1_cfr.mp4";
+  return "/videos/cam1_tracked.mp4";
 };
 
 const DEFAULT_CAMERAS: Camera[] = [
@@ -140,9 +140,9 @@ const DEFAULT_CAMERAS: Camera[] = [
     bearing: 145,
     fovAngle: 78,
     lensType: "Calibrated 8.0mm Fixed Lens",
-    streamUrl: "/videos/cam1_cfr.mp4",
-    cleanSrc: "/videos/cam1_cfr.mp4",
-    trackedSrc: "/videos/cam1_cfr.mp4",
+    streamUrl: "/videos/cam1_tracked.mp4",
+    cleanSrc: "/videos/cam1_tracked.mp4",
+    trackedSrc: "/videos/cam1_tracked.mp4",
     isDemoFeed: true,
     integrityChecks: {
       freezeDetected: false,
@@ -167,9 +167,9 @@ const DEFAULT_CAMERAS: Camera[] = [
     bearing: 160,
     fovAngle: 82,
     lensType: "Calibrated 6.0mm Fixed Lens",
-    streamUrl: "/videos/cam2_cfr.mp4",
-    cleanSrc: "/videos/cam2_cfr.mp4",
-    trackedSrc: "/videos/cam2_cfr.mp4",
+    streamUrl: "/videos/cam2_tracked.mp4",
+    cleanSrc: "/videos/cam2_tracked.mp4",
+    trackedSrc: "/videos/cam2_tracked.mp4",
     isDemoFeed: true,
     integrityChecks: {
       freezeDetected: false,
@@ -194,9 +194,9 @@ const DEFAULT_CAMERAS: Camera[] = [
     bearing: 210,
     fovAngle: 85,
     lensType: "Calibrated 4.0mm Wide Lens",
-    streamUrl: "/videos/cam3_cfr.mp4",
-    cleanSrc: "/videos/cam3_cfr.mp4",
-    trackedSrc: "/videos/cam3_cfr.mp4",
+    streamUrl: "/videos/cam3_tracked.mp4",
+    cleanSrc: "/videos/cam3_tracked.mp4",
+    trackedSrc: "/videos/cam3_tracked.mp4",
     isDemoFeed: true,
     integrityChecks: {
       freezeDetected: false,
@@ -221,9 +221,9 @@ const DEFAULT_CAMERAS: Camera[] = [
     bearing: 195,
     fovAngle: 90,
     lensType: "Calibrated 12.0mm Telephoto",
-    streamUrl: "/videos/cam4_cfr.mp4",
-    cleanSrc: "/videos/cam4_cfr.mp4",
-    trackedSrc: "/videos/cam4_cfr.mp4",
+    streamUrl: "/videos/cam4_tracked.mp4",
+    cleanSrc: "/videos/cam4_tracked.mp4",
+    trackedSrc: "/videos/cam4_tracked.mp4",
     isDemoFeed: true,
     integrityChecks: {
       freezeDetected: false,
@@ -379,7 +379,7 @@ const DEFAULT_ALERTS: AlertItem[] = [
     reason: "Plate matched active user-defined Demo Watchlist entry (PCR 12) with 0.94 consensus confidence across tracking window.",
     snapshotUrl: "/snapshots/alert_cam1_mh31cb8061.jpg",
     cropUrl: "/snapshots/alert_cam1_mh31cb8061.jpg",
-    videoUrl: "/videos/cam1_cfr.mp4",
+    videoUrl: "/videos/cam1_tracked.mp4",
     evidenceRecordId: "EVD-REC-001",
   },
   {
@@ -398,7 +398,7 @@ const DEFAULT_ALERTS: AlertItem[] = [
     reason: "Character similarity score 0.68 on ambiguous plate suffix; requires operator validation before dispatch.",
     snapshotUrl: "/snapshots/alert_cam3_mh31cb8064.jpg",
     cropUrl: "/snapshots/alert_cam3_mh31cb8064.jpg",
-    videoUrl: "/videos/cam3_cfr.mp4",
+    videoUrl: "/videos/cam3_tracked.mp4",
     evidenceRecordId: "EVD-REC-003",
   },
   {
@@ -417,7 +417,7 @@ const DEFAULT_ALERTS: AlertItem[] = [
     reason: "Vehicle stationary in primary active transit lane for > 40 seconds; measured speed 0.0 km/h with high tracking confidence.",
     snapshotUrl: "/snapshots/alert_cam3_mh31eq4892.jpg",
     cropUrl: "/snapshots/alert_cam3_mh31eq4892.jpg",
-    videoUrl: "/videos/cam3_cfr.mp4",
+    videoUrl: "/videos/cam3_tracked.mp4",
     evidenceRecordId: "EVD-REC-004",
   },
   {
@@ -434,7 +434,7 @@ const DEFAULT_ALERTS: AlertItem[] = [
     reason: "NTP clock skew deviation of +18ms detected and resynchronised by edge telemetry.",
     snapshotUrl: "/snapshots/alert_cam4_ap05jeo.jpg",
     cropUrl: "/snapshots/alert_cam4_ap05jeo.jpg",
-    videoUrl: "/videos/cam4_cfr.mp4",
+    videoUrl: "/videos/cam4_tracked.mp4",
     confirmedBy: "Supervisor Desk",
     confirmedAt: "2026-09-30T07:16:30.000Z",
   },

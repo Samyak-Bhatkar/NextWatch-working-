@@ -702,12 +702,13 @@ function EvidenceDetailDrawer({
                     (alert.snapshotUrl && alert.snapshotUrl.endsWith(".mp4")
                       ? alert.snapshotUrl
                       : alert.cameraId === "CAM-002"
-                      ? "/videos/cam2_cfr.mp4"
+                      ? "/videos/cam2_tracked.mp4"
                       : alert.cameraId === "CAM-003"
-                      ? "/videos/cam3_cfr.mp4"
+                      ? "/videos/cam3_tracked.mp4"
                       : alert.cameraId === "CAM-004"
-                      ? "/videos/cam4_cfr.mp4"
-                      : "/videos/cam1_cfr.mp4")
+                      ? "/videos/cam4_tracked.mp4"
+                      : "/videos/cam1_tracked.mp4")
+                  }
                   }
                   type="video/mp4"
                 />
