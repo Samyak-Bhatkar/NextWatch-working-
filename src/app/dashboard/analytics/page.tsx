@@ -1,8 +1,7 @@
 "use client";
 
 import { useDashboardStore } from "@/lib/store";
-import { cameras, getEventLabel } from "@/lib/mock-data";
-import { useMemo, useState, useEffect } from "react";
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -13,437 +12,256 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from "recharts";
 import {
-  AlertTriangle,
-  Clock,
-  TrendingDown,
   Activity,
-  Download,
+  TrendingDown,
+  Clock,
   ShieldCheck,
-  Zap,
-  Radio,
-  Eye,
-  CheckCircle2,
-  Camera as CameraIcon,
+  AlertTriangle,
+  Car,
   Layers,
-  ArrowUpRight,
-  RefreshCw,
+  ArrowRight,
+  Hash,
+  Compass,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
-/* ═══════════════════════════════════════════════════════════════════════
-   KPI Card Component
-   ═══════════════════════════════════════════════════════════════════════ */
-function KpiCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-  sublabel,
-  badge,
-}: {
-  label: string;
-  value: string | number;
-  icon: React.ElementType;
-  color: string;
-  sublabel?: string;
-  badge?: string;
-}) {
-  return (
-    <div className="glass-card rounded-2xl p-5 border border-slate-200/90 bg-white/90 backdrop-blur-xl shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-mono-data font-bold uppercase tracking-wider text-slate-500">
-          {label}
+function RootCauseBadge({ cause }: { cause: string }) {
+  switch (cause) {
+    case "stopped_vehicle":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          Stopped Vehicle Hazard
         </span>
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center border shadow-2xs"
-          style={{ background: `${color}15`, borderColor: `${color}35` }}
-        >
-          <Icon size={17} style={{ color }} />
-        </div>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono-data">
-          {value}
-        </p>
-        {badge && (
-          <span className="text-[10px] font-mono-data font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            {badge}
-          </span>
-        )}
-      </div>
-      {sublabel && (
-        <p className="text-[11px] font-mono-data text-slate-500 mt-2 font-medium">
-          {sublabel}
-        </p>
-      )}
-    </div>
-  );
+      );
+    case "collision":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          Collision Incident
+        </span>
+      );
+    case "illegal_parking":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-blue-50 text-blue-700 border border-blue-200">
+          Illegal Staging / Parking
+        </span>
+      );
+    case "high_volume":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono-data font-bold bg-purple-50 text-purple-700 border border-purple-200">
+          Capacity Surge
+        </span>
+      );
+    default:
+      return null;
+  }
 }
 
-export default function AnalyticsPage() {
-  const alerts = useDashboardStore((s) => s.alerts);
-  const [selectedCamera, setSelectedCamera] = useState("all");
-  const [livePulseTick, setLivePulseTick] = useState(0);
-
-  // Real-time live pulse ticker syncing every 3 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLivePulseTick((prev) => prev + 1);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Filter alerts by camera
-  const liveFilteredAlerts = useMemo(() => {
-    if (selectedCamera === "all") return alerts;
-    return alerts.filter((a) => a.cameraId === selectedCamera);
-  }, [alerts, selectedCamera]);
-
-  const totalIncidents = liveFilteredAlerts.length;
-  const criticalCount = liveFilteredAlerts.filter(
-    (a) => a.severity === "critical" || a.eventType === "accident_collision"
-  ).length;
-  const resolvedCount = liveFilteredAlerts.filter(
-    (a) => a.status === "resolved" || a.status === "acknowledged"
-  ).length;
-  const resolutionRate = totalIncidents > 0 ? Math.round((resolvedCount / totalIncidents) * 100) : 100;
-
-  // 1. EXACT 24-HOUR BINS HOURLY INCIDENT DISTRIBUTION (Matching Screenshot)
-  const hourly24BinsData = useMemo(() => {
-    const currentHour = new Date().getHours();
-    const data = [];
-
-    const hourMultipliers = [
-      4, 5, 2, 3, 6, 3, 7, 13, 20, 18, 24, 21, 16, 14, 17, 22, 16, 21, 11, 15, 2, 4, 17, 3
-    ];
-
-    for (let h = 0; h < 24; h++) {
-      const isCurrent = h === currentHour;
-      const base = hourMultipliers[h % hourMultipliers.length];
-      const liveAdd = isCurrent ? (livePulseTick % 5) + 2 : 0;
-      const count = base + liveAdd;
-
-      data.push({
-        hour: `${h.toString().padStart(2, "0")}:00`,
-        alerts: count,
-        isCurrent,
-      });
-    }
-    return data;
-  }, [livePulseTick]);
-
-  // 2. EXACT 7-DAY PER-NODE FREQUENCY SECTOR TREND (Matching Screenshot)
-  const sectorTrendData = useMemo(() => {
-    const dates = ["08-12", "08-13", "08-14", "08-15", "08-16", "08-17", "08-18"];
-    const offset = livePulseTick % 3;
-
-    return dates.map((date, idx) => {
-      return {
-        date,
-        "Wardha Road Junction": 80 + Math.sin(idx * 1.1) * 8 + (idx === 6 ? offset * 2 : 0),
-        "Sitabuldi Metro Interchange": 105 - idx * 6 + (idx === 6 ? offset * 3 : 0),
-        "Dharampeth Traffic Circle": 57 + idx * 5 + Math.cos(idx * 0.9) * 6,
-        "Ambazari Lake Promenade": 78 + Math.sin(idx * 1.5) * 22 + (idx === 6 ? offset : 0),
-      };
-    });
-  }, [livePulseTick]);
-
-  // Event category share
-  const eventDistribution = useMemo(() => {
-    const counts: Record<string, number> = {};
-    liveFilteredAlerts.forEach((a) => {
-      const label = getEventLabel(a.eventType);
-      counts[label] = (counts[label] || 0) + 1;
-    });
-
-    const colors = ["#4F46E5", "#EF4444", "#F59E0B", "#10B981", "#8B5CF6", "#06B6D4"];
-    return Object.entries(counts).map(([name, value], i) => ({
-      name,
-      value,
-      color: colors[i % colors.length],
-    }));
-  }, [liveFilteredAlerts]);
-
-  // Camera distribution matrix
-  const cameraDistribution = useMemo(() => {
-    return cameras.map((cam) => {
-      const camAlerts = alerts.filter((a) => a.cameraId === cam.id);
-      const criticals = camAlerts.filter((a) => a.severity === "critical").length;
-      return {
-        name: cam.name.split(" ")[0],
-        fullName: cam.name,
-        id: cam.id,
-        incidents: camAlerts.length,
-        critical: criticals,
-        fps: cam.fps,
-        status: cam.status,
-      };
-    });
-  }, [alerts]);
+export default function CityAnalyticsPage() {
+  const cityAnalytics = useDashboardStore((s) => s.cityAnalytics);
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6">
-      {/* Top Bar: Selector + Live Telemetry */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900">
-              NexWatch Intelligence & Live Analytics
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-mono-data font-bold animate-pulse flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              LIVE SURVEILLANCE SYNC
-            </span>
+    <div className="space-y-4 h-[calc(100vh-104px)] overflow-y-auto pr-1">
+      {/* KPI Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-[10.5px] font-mono-data uppercase font-bold">Total Plate Sightings</span>
+            <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center">
+              <Hash size={15} />
+            </div>
           </div>
-          <p className="text-xs text-slate-500 font-mono-data mt-1">
-            Real-time traffic computer vision violations, automated Twilio SOS telemetry, and edge analytics
-          </p>
+          <div className="text-2xl font-black text-slate-900 font-mono-data">
+            {cityAnalytics.totalPlateReadings.toLocaleString()}
+          </div>
+          <div className="text-[10px] text-slate-500 font-mono-data mt-1">
+            Across 4 calibrated edge sensor nodes
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedCamera}
-            onChange={(e) => setSelectedCamera(e.target.value)}
-            className="rounded-xl px-3.5 py-2 text-xs font-mono-data bg-white border border-slate-200 text-slate-800 outline-none cursor-pointer shadow-2xs font-semibold"
-          >
-            <option value="all">All 4 Municipal Sectors</option>
-            {cameras.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.id})
-              </option>
-            ))}
-          </select>
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-[10.5px] font-mono-data uppercase font-bold">Consensus OCR Confidence</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <ShieldCheck size={15} />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 font-mono-data">
+            {(cityAnalytics.averageConsensusConfidence * 100).toFixed(1)}%
+          </div>
+          <div className="text-[10px] text-emerald-700 font-mono-data mt-1 font-semibold">
+            3-recogniser character voting
+          </div>
+        </div>
 
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#4F46E5] text-white hover:bg-[#4338CA] transition-colors cursor-pointer shadow-sm shadow-indigo-500/20"
-          >
-            <Download size={13} />
-            Export Intel PDF
-          </button>
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-[10.5px] font-mono-data uppercase font-bold">Verified Trajectory Links</span>
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Activity size={15} />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 font-mono-data">
+            {cityAnalytics.verifiedTrajectoryLinks.toLocaleString()}
+          </div>
+          <div className="text-[10px] text-slate-500 font-mono-data mt-1">
+            Link Trust Score ≥ 0.85
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-[10.5px] font-mono-data uppercase font-bold">Active Bottlenecks</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <AlertTriangle size={15} />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 font-mono-data">
+            {cityAnalytics.activeBottlenecksCount} Corridors
+          </div>
+          <div className="text-[10px] text-amber-700 font-mono-data mt-1 font-semibold">
+            With verified root-cause tags
+          </div>
         </div>
       </div>
 
-      {/* 4 Synchronized KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Live Edge Incidents"
-          value={totalIncidents}
-          icon={AlertTriangle}
-          color="#EF4444"
-          sublabel="Syncing with active CCTV streams"
-          badge="LIVE"
-        />
-        <KpiCard
-          label="Critical / High Urgency"
-          value={criticalCount}
-          icon={Zap}
-          color="#F59E0B"
-          sublabel="Accidents & Contraflow Violations"
-        />
-        <KpiCard
-          label="Triage & Resolution Rate"
-          value={`${resolutionRate}%`}
-          icon={ShieldCheck}
-          color="#10B981"
-          sublabel={`${resolvedCount} / ${totalIncidents} Resolved or Dispatched`}
-          badge="OPTIMAL"
-        />
-        <KpiCard
-          label="Connected RTSP Nodes"
-          value="4 / 4"
-          icon={Activity}
-          color="#4F46E5"
-          sublabel="30.0 FPS · TensorRT Acceleration"
-          badge="100% ONLINE"
-        />
-      </div>
-
-      {/* Charts Grid: HOURLY INCIDENT DISTRIBUTION & 7-DAY SECTOR TREND (Matching User Image) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* 1. HOURLY INCIDENT DISTRIBUTION (TODAY) 24-HOUR BINS */}
-        <div className="glass-panel rounded-2xl p-5 border border-slate-200/90 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      {/* Middle Grid: Density Time-Series + Origin-Destination Matrix */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Hourly Traffic Density Chart */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
             <div>
-              <span className="text-[11px] font-mono-data font-bold uppercase tracking-wider text-slate-500">
-                HOURLY INCIDENT DISTRIBUTION (TODAY)
-              </span>
+              <h3 className="text-xs font-bold text-slate-900">Traffic Density per Corridor Segment</h3>
+              <p className="text-[10px] font-mono-data text-slate-500">Hourly throughput time-series (Vehicles/Hour)</p>
             </div>
-            <span className="text-[10px] font-mono-data px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold border border-slate-200">
-              24-HOUR BINS
+            <span className="text-[10px] font-mono-data text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-md font-semibold">
+              Live Edge Sensors
             </span>
           </div>
 
-          <div className="h-[280px] w-full pt-2">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hourly24BinsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" vertical={false} opacity={0.6} />
-                <XAxis dataKey="hour" stroke="#64748B" fontSize={9} tickLine={false} interval={3} fontStyle="bold" />
-                <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+              <LineChart data={cityAnalytics.densityTimeSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis dataKey="hour" stroke="#94A3B8" fontSize={10} fontFamily="monospace" />
+                <YAxis stroke="#94A3B8" fontSize={10} fontFamily="monospace" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0F172A",
-                    color: "#FFFFFF",
-                    borderColor: "#334155",
-                    borderRadius: "10px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-                    fontSize: "12px",
-                    fontFamily: "JetBrains Mono, monospace",
-                  }}
-                  cursor={{ fill: "rgba(99, 102, 241, 0.08)" }}
-                  formatter={(val: any) => [`alerts : ${val}`, ""]}
-                />
-                <Bar dataKey="alerts" fill="#0091FF" radius={[4, 4, 0, 0]}>
-                  {hourly24BinsData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.isCurrent ? "#00E5FF" : "#0091FF"}
-                      opacity={entry.isCurrent ? 1 : 0.9}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 2. 7-DAY SECTOR TREND ANALYSIS PER-NODE FREQUENCY */}
-        <div className="glass-panel rounded-2xl p-5 border border-slate-200/90 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <span className="text-[11px] font-mono-data font-bold uppercase tracking-wider text-slate-500">
-                7-DAY SECTOR TREND ANALYSIS
-              </span>
-            </div>
-            <span className="text-[10px] font-mono-data px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold border border-slate-200">
-              PER-NODE FREQUENCY
-            </span>
-          </div>
-
-          <div className="h-[280px] w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sectorTrendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" opacity={0.6} />
-                <XAxis dataKey="date" stroke="#64748B" fontSize={10} tickLine={false} />
-                <YAxis stroke="#64748B" fontSize={10} tickLine={false} domain={[0, 130]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderColor: "#CBD5E1",
+                    background: "#0F172A",
                     borderRadius: "12px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                    color: "white",
                     fontSize: "11px",
-                    fontFamily: "JetBrains Mono, monospace",
+                    fontFamily: "monospace",
                   }}
                 />
-                <Line
-                  type="natural"
-                  dataKey="Ambazari Lake Promenade"
-                  stroke="#A855F7"
-                  strokeWidth={2.2}
-                  dot={{ r: 3, fill: "#A855F7" }}
-                />
-                <Line
-                  type="natural"
-                  dataKey="Dharampeth Traffic Circle"
-                  stroke="#10B981"
-                  strokeWidth={2.2}
-                  dot={{ r: 3, fill: "#10B981" }}
-                />
-                <Line
-                  type="natural"
-                  dataKey="Sitabuldi Metro Interchange"
-                  stroke="#F59E0B"
-                  strokeWidth={2.2}
-                  dot={{ r: 3, fill: "#F59E0B" }}
-                />
-                <Line
-                  type="natural"
-                  dataKey="Wardha Road Junction"
-                  stroke="#00E5FF"
-                  strokeWidth={2.2}
-                  dot={{ r: 3, fill: "#00E5FF" }}
-                />
+                <Line type="monotone" dataKey="nodeA_B" stroke="#2563EB" strokeWidth={2.5} name="Segment RN-101 → RN-102" />
+                <Line type="monotone" dataKey="nodeB_C" stroke="#10B981" strokeWidth={2.5} name="Segment RN-102 → RN-103" />
+                <Line type="monotone" dataKey="nodeC_D" stroke="#F59E0B" strokeWidth={2.5} name="Segment RN-103 → RN-104" />
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] font-mono-data">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#A855F7]" />
-              <span className="text-[#A855F7] font-semibold">Ambazari Lake Promenade</span>
+        {/* Origin-Destination (OD) Matrix */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-5 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900">Origin-Destination (OD) Flow Matrix</h3>
+              <p className="text-[10px] font-mono-data text-slate-500">Corridor interchange volume & avg travel duration</p>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-              <span className="text-[#10B981] font-semibold">Dharampeth Traffic Circle</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-              <span className="text-[#F59E0B] font-semibold">Sitabuldi Metro Interchange</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00E5FF]" />
-              <span className="text-[#00E5FF] font-semibold">Wardha Road Junction</span>
-            </div>
+          </div>
+
+          <div className="flex-1 overflow-x-auto">
+            <table className="w-full text-left font-mono-data text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase">
+                  <th className="pb-2">Origin Node</th>
+                  <th className="pb-2">Destination Node</th>
+                  <th className="pb-2">Volume</th>
+                  <th className="pb-2">Avg Travel Time</th>
+                  <th className="pb-2">Peak Flow</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-[11px]">
+                {cityAnalytics.odMatrix.map((flow, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 font-bold text-slate-800">{flow.originNode}</td>
+                    <td className="py-2.5 font-bold text-slate-800">{flow.destinationNode}</td>
+                    <td className="py-2.5 text-[#2563EB] font-bold">{flow.count.toLocaleString()}</td>
+                    <td className="py-2.5 text-slate-600">{Math.floor(flow.avgTravelTimeSec / 60)}m {flow.avgTravelTimeSec % 60}s</td>
+                    <td className="py-2.5 font-semibold text-slate-700">{flow.peakHourFlow}/hr</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      {/* Live Sector Camera Breakdown Table */}
-      <div className="glass-panel rounded-2xl p-5 border border-slate-200/90 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              Municipal CCTV Nodes Telemetry Matrix
-            </h3>
-            <p className="text-[11px] text-slate-500 font-mono-data">
-              Live camera-wise violation load, fps performance, and automated dispatch status
-            </p>
+      {/* Bottom Grid: Bottlenecks with Root Cause Tags + Anonymized SHA-256 Plate Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Identified Bottlenecks with Root Cause Tags */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900">Corridor Bottlenecks & Root Causes</h3>
+              <p className="text-[10px] font-mono-data text-slate-500">Attributed directly to verified sensor events</p>
+            </div>
           </div>
-          <span className="text-xs font-mono-data font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-            ● All 4 Edge Streams Online
-          </span>
+
+          <div className="space-y-2.5">
+            {cityAnalytics.bottlenecks.map((btn) => (
+              <div
+                key={btn.id}
+                className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 space-y-1.5 font-mono-data text-xs"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-900">{btn.corridor}</span>
+                  <RootCauseBadge cause={btn.rootCause} />
+                </div>
+                <div className="flex items-center justify-between text-[10.5px] text-slate-600">
+                  <span>Congestion Index: <strong className="text-slate-900">{btn.congestionIndex}%</strong></span>
+                  <span>Avg Speed: <strong className="text-rose-600">{btn.avgSpeedKmph} km/h</strong> (Normal: {btn.normalSpeedKmph} km/h)</span>
+                </div>
+                <p className="text-[10px] text-slate-500 italic">
+                  Root Cause: {btn.rootCauseDescription}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono-data">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-500 uppercase tracking-wider">
-                <th className="pb-3 pl-2">Camera Node</th>
-                <th className="pb-3">Sector Location</th>
-                <th className="pb-3">Live Incidents</th>
-                <th className="pb-3">Critical SOS</th>
-                <th className="pb-3">FPS</th>
-                <th className="pb-3 pr-2">Twilio Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
-              {cameraDistribution.map((cam) => (
-                <tr key={cam.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 pl-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="font-bold text-slate-900">{cam.id}</span>
-                  </td>
-                  <td className="py-3 text-slate-700">{cam.fullName}</td>
-                  <td className="py-3 font-bold text-[#4F46E5]">{cam.incidents}</td>
-                  <td className="py-3 font-bold text-rose-600">{cam.critical}</td>
-                  <td className="py-3 text-slate-600">{cam.fps} FPS</td>
-                  <td className="py-3 pr-2">
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                      Connected
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Anonymized Plate Hashes (Privacy Preserving) */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900">Privacy-Preserving Aggregate Stream</h3>
+              <p className="text-[10px] font-mono-data text-slate-500">Cryptographically hashed SHA-256 identifiers in public analytics</p>
+            </div>
+            <span className="text-[9px] font-mono-data font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+              DPDP ACT COMPLIANT
+            </span>
+          </div>
+
+          <div className="space-y-2 font-mono-data text-xs">
+            {cityAnalytics.recentAnonymizedSightings.map((sighting, idx) => (
+              <div
+                key={idx}
+                className="p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between shadow-2xs"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#2563EB] bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
+                    {sighting.plateHash}
+                  </span>
+                  <span className="text-slate-600 text-[10.5px]">{sighting.corridor}</span>
+                </div>
+                <div className="flex items-center gap-3 text-[10.5px] text-slate-500">
+                  <span>{sighting.speedKmph} km/h</span>
+                  <span className="text-emerald-600 font-bold">TRUST {sighting.trustScore.toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -1,79 +1,58 @@
 "use client";
 
-import { cameras, getEventLabel } from "@/lib/mock-data";
 import { useDashboardStore } from "@/lib/store";
-import { Camera, Alert, AlertStatus, AlertSeverity, AlertEventType } from "@/lib/types";
+import { Camera, AlertItem, AlertReviewStatus, AlertType } from "@/lib/types";
+import { VideoDetectionCanvas } from "@/components/video-detection-canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Radio,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Search,
   Check,
   X,
-  AlertTriangle,
-  Eye,
-  ChevronDown,
+  Send,
   Zap,
   Maximize2,
   Minimize2,
   Camera as CameraIcon,
-  Search,
-  CheckCheck,
-  Send,
-  Play,
-  Pause,
-  RotateCcw,
-  Sliders,
-  Compass,
-  Car,
-  User,
-  Clock,
-  Shield,
-  Activity,
   Layers,
   MapPin,
-  Flame,
-  Volume2,
-  MessageSquare,
+  Clock,
+  Sparkles,
+  AlertTriangle,
+  FileCheck2,
+  FileX,
+  Compass,
+  ArrowRight,
+  User,
+  Plus,
+  Trash2,
+  ListOrdered,
 } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 
 /* ═══════════════════════════════════════════════════════════════════════
-   HELPERS & COLOR FORMATTERS
+   HELPERS & FORMATTERS
    ═══════════════════════════════════════════════════════════════════════ */
-function getSeverityColor(sev: AlertSeverity): string {
-  switch (sev) {
-    case "critical":
-      return "#FF3B30";
-    case "high":
-      return "#FF9500";
-    case "medium":
-      return "#0091FF";
-    case "low":
-      return "#10B981";
+function getAlertBadge(type: AlertType) {
+  switch (type) {
+    case "blacklist_hit":
+      return { label: "Watchlist Hit", color: "bg-rose-50 text-rose-700 border-rose-200" };
+    case "cloned_plate_suspect":
+      return { label: "Cloned Plate Suspect", color: "bg-purple-50 text-purple-700 border-purple-200" };
+    case "feed_integrity":
+      return { label: "Feed Integrity", color: "bg-amber-50 text-amber-700 border-amber-200" };
+    case "low_trust_link":
+      return { label: "Low-Trust Link", color: "bg-blue-50 text-blue-700 border-blue-200" };
+    case "behaviour_event":
+      return { label: "Behaviour Event", color: "bg-orange-50 text-orange-700 border-orange-200" };
   }
-}
-
-function getStatusColor(status: AlertStatus): string {
-  switch (status) {
-    case "new":
-      return "#FF3B30";
-    case "acknowledged":
-      return "#FF9500";
-    case "resolved":
-      return "#10B981";
-    case "false_positive":
-      return "#64748B";
-  }
-}
-
-function getLatencyColor(ms: number): string {
-  if (ms < 15000) return "#10B981";
-  if (ms < 30000) return "#FF9500";
-  return "#FF3B30";
 }
 
 function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const secs = Math.max(1, Math.floor(diff / 1000));
+  const diff = Math.max(1000, Date.now() - new Date(iso).getTime());
+  const secs = Math.floor(diff / 1000);
   if (secs < 60) return `${secs}s ago`;
   const mins = Math.floor(secs / 60);
   if (mins < 60) return `${mins}m ago`;
@@ -81,116 +60,50 @@ function timeAgo(iso: string): string {
   return `${hrs}h ago`;
 }
 
-export function formatWhatsAppAlertText(alert: Alert): string {
-  const isAccident = alert.eventType === "accident_collision" || alert.eventType === "stopped_vehicle_accident";
-  const isCrowd = alert.eventType === "crowd_density";
-  const isWrongWay = alert.eventType === "wrong_way";
-
-  let header = "⚠️ *NEXWATCH CCTV TRAFFIC INCIDENT* ⚠️";
-  let action = "⚠️ DISPATCH LOCAL PCR PATROL UNIT FOR INTERVENTION";
-
-  if (isAccident) {
-    header = "🚨 *NEXWATCH CRITICAL ACCIDENT SOS* 🚨";
-    action = "🚨 DISPATCH AMBULANCE / EMS & TRAFFIC POLICE IMMEDIATELY";
-  } else if (isCrowd) {
-    header = "👥 *NEXWATCH MASS OVERCROWDING SURGE ALERT* 👥";
-    action = "👥 DISPATCH RAPID ACTION FORCE (RAF) / CROWD CONTROL";
-  } else if (isWrongWay) {
-    header = "⛔ *NEXWATCH CONTRAFLOW / WRONG-WAY ALERT* ⛔";
-    action = "⛔ INTERCEPT CONTRAFLOW VEHICLE / DIVERT TRAFFIC";
-  }
-
-  const vClass = alert.vehicleDetails?.objectClass || "Auto Rickshaw";
-  const plate = alert.vehicleDetails?.licensePlate || "MH 31 TA 1204";
-  const timeStr = new Date(alert.detectedAt).toLocaleTimeString("en-IN", { hour12: false });
-
-  return `${header}
-━━━━━━━━━━━━━━━━━━━━━
-📍 *CCTV Area:* ${alert.cameraName} (${alert.cameraId})
-⚠️ *Violation:* ${getEventLabel(alert.eventType)}
-🔴 *Severity:* ${alert.severity.toUpperCase()} (${Math.round(alert.confidence * 100)}% AI Conf)
-🚗 *Target Vehicle:* ${vClass} (${alert.trackId})
-🔢 *License Plate:* *${plate}*
-⏱️ *Detection Time:* ${timeStr} IST
-⚡ *Action Mandate:* ${action}
-━━━━━━━━━━━━━━━━━━━━━
-🔗 *Live CCTV Feeds:* https://cityeye-frontend.onrender.com/dashboard
-📡 *CityEye Command Center | Twilio Emergency Dispatch*`;
-}
-
-export function generateWhatsAppClickUrl(alert: Alert, phone = "+919322166721"): string {
-  const cleanPhone = phone.replace("+", "").replace(/\s+/g, "").replace(/-/g, "");
-  const text = encodeURIComponent(formatWhatsAppAlertText(alert));
-  return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${text}`;
-}
-
-const CAMERA_TRACKED_VIDEOS: Record<string, string> = {
-  "CAM-001": "/videos/cam1_tracked.mp4",
-  "CAM-002": "/videos/cam2_tracked.mp4",
-  "CAM-003": "/videos/cam3_tracked.mp4",
-  "CAM-004": "/videos/cam4_tracked.mp4",
-};
-
-const CAMERA_RAW_VIDEOS: Record<string, string> = {
-  "CAM-001": "/videos/cam1_clean.mp4",
-  "CAM-002": "/videos/cam2_clean.mp4",
-  "CAM-003": "/videos/cam3_clean.mp4",
-  "CAM-004": "/videos/cam4_clean.mp4",
-};
-
 /* ═══════════════════════════════════════════════════════════════════════
-   CAMERA STREAM TILE
+   CAMERA TILE (Verified Trust, Real Frame-Accurate Canvas, Node ID)
    ═══════════════════════════════════════════════════════════════════════ */
 function CameraTile({
   camera,
   isFocused,
   onFocus,
-  onExpandFullscreen,
+  highlightedTrackId,
 }: {
   camera: Camera;
   isFocused?: boolean;
   onFocus?: () => void;
-  onExpandFullscreen?: () => void;
+  highlightedTrackId?: string | null;
 }) {
-  const visionMode = useDashboardStore((s) => s.visionMode);
+  const overlayMode = useDashboardStore((s) => s.overlayMode);
+  const enhancementMode = useDashboardStore((s) => s.enhancementMode);
   const alerts = useDashboardStore((s) => s.alerts);
-  const [time, setTime] = useState("");
-  const [msTime, setMsTime] = useState("000");
-  const [showOverlays, setShowOverlays] = useState(true);
+  const [timeStr, setTimeStr] = useState("");
   const [isFlashing, setIsFlashing] = useState(false);
-  const [ptzAngle, setPtzAngle] = useState({ pan: 0, tilt: 0, zoom: 1 });
 
-  const activeAlert = alerts.find(
-    (a) => a.cameraId === camera.id && a.status === "new"
+  // Active persistent events on this camera
+  const cameraAlert = alerts.find(
+    (a) => a.cameraId === camera.id && a.status === "needs_review"
   );
 
-  // Computer Vision is active if visionMode is "cv" (or legacy "wireframe") AND showOverlays is true
-  const isCvActive = (visionMode === "cv" || visionMode === "wireframe") && showOverlays;
-
-  const videoSource = isCvActive
-    ? (CAMERA_TRACKED_VIDEOS[camera.id] || "/videos/cam1_tracked.mp4")
-    : (CAMERA_RAW_VIDEOS[camera.id] || "/videos/cam1_clean.mp4");
-
+  const videoSource = camera.streamUrl || camera.trackedSrc || "/videos/cam1_cfr.mp4";
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const cameraIndex = camera.id.includes("1")
+    ? 1
+    : camera.id.includes("2")
+    ? 2
+    : camera.id.includes("3")
+    ? 3
+    : 4;
 
   useEffect(() => {
     const tick = () => {
-      const now = new Date();
-      setTime(now.toLocaleTimeString("en-IN", { hour12: false }));
-      setMsTime(now.getMilliseconds().toString().padStart(3, "0"));
+      setTimeStr(new Date().toLocaleTimeString("en-IN", { hour12: false }));
     };
     tick();
-    const id = setInterval(tick, 50);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch((err) => {
-        console.warn("Video autoplay prevented:", err);
-      });
-    }
-  }, [videoSource]);
 
   const triggerSnapshot = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -198,54 +111,69 @@ function CameraTile({
     setTimeout(() => setIsFlashing(false), 200);
   };
 
+  const isDegraded = camera.healthStatus === "DEGRADED";
+  const isCompromised = camera.healthStatus === "COMPROMISED";
+
   return (
     <div
-      className={`rounded-xl border overflow-hidden transition-all duration-300 group flex flex-col relative ${
-        activeAlert ? "border-[#FF3B30]/60 shadow-[0_0_20px_rgba(255,59,48,0.2)]" : "border-[#1E2638]"
-      } ${isFocused ? "ring-2 ring-[#00E5FF]/60" : ""}`}
-      style={{
-        background: "var(--bg-surface)",
-      }}
+      className={`rounded-2xl border overflow-hidden transition-all duration-300 group flex flex-col relative bg-slate-900 shadow-sm ${
+        isCompromised
+          ? "border-rose-500 ring-2 ring-rose-500/40"
+          : isDegraded
+          ? "border-amber-400 ring-1 ring-amber-400/40"
+          : "border-slate-200/90 hover:border-indigo-300"
+      }`}
     >
       {/* Flash effect overlay */}
       {isFlashing && (
         <div className="absolute inset-0 bg-white z-30 pointer-events-none transition-opacity duration-200" />
       )}
 
-      {/* Camera Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-white/90 backdrop-blur-md flex-shrink-0 relative z-10">
+      {/* Camera Header Bar */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-white/95 backdrop-blur-md flex-shrink-0 z-10">
         <div className="flex items-center gap-2 min-w-0">
+          {/* Status Indicator */}
           <span
             className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              camera.status === "online" ? "bg-[#10B981] animate-live-pulse" : "bg-[#EF4444]"
+              isCompromised
+                ? "bg-rose-500 animate-ping"
+                : isDegraded
+                ? "bg-amber-500 animate-pulse"
+                : "bg-emerald-500"
             }`}
           />
           <span className="text-xs font-bold text-slate-800 truncate">
             {camera.name}
           </span>
-          <span className="text-[10px] font-mono-data text-[#4F46E5] px-1.5 py-0.2 rounded bg-indigo-50 border border-indigo-200/60 hidden sm:inline font-bold">
-            {camera.id}
+          <span className="text-[10px] font-mono-data text-indigo-700 px-1.5 py-0.2 rounded bg-indigo-50 border border-indigo-200/80 font-bold">
+            {camera.roadGraphNodeId}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {activeAlert && (
-            <span className="text-[9px] font-mono-data px-1.5 py-0.5 rounded font-bold bg-rose-50 text-rose-600 border border-rose-200 animate-pulse flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-              ALERT DETECTED
-            </span>
-          )}
-          <span className="text-[10px] font-mono-data text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-            {camera.fps} FPS · {camera.bitrate}
+          {/* Camera Trust Score Chip */}
+          <div
+            className={`text-[9.5px] font-mono-data px-2 py-0.5 rounded-full font-bold border flex items-center gap-1 ${
+              isCompromised
+                ? "bg-rose-50 text-rose-700 border-rose-300"
+                : isDegraded
+                ? "bg-amber-50 text-amber-700 border-amber-300"
+                : "bg-emerald-50 text-emerald-700 border-emerald-300"
+            }`}
+          >
+            <span>TRUST {camera.trustScore.toFixed(2)}</span>
+            <span>·</span>
+            <span>{camera.healthStatus}</span>
+          </div>
+
+          <span className="text-[10px] font-mono-data text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 hidden sm:inline">
+            {camera.fps} FPS
           </span>
         </div>
       </div>
 
-      {/* Viewport with Shaders & Real YOLO AI Tracker */}
-      <div
-        className={`relative aspect-video bg-black overflow-hidden flex-1 cursor-crosshair vision-${visionMode}`}
-      >
-        {/* HTML5 Video Stream with Real Frame-by-Frame YOLO ByteTrack Annotations */}
+      {/* Video Viewport */}
+      <div className="relative aspect-video bg-black overflow-hidden flex-1 cursor-crosshair">
         <video
           ref={videoRef}
           key={videoSource}
@@ -253,109 +181,113 @@ function CameraTile({
           loop
           muted
           playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover z-0"
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${
+            enhancementMode === "night"
+              ? "contrast-125 brightness-110 saturate-120"
+              : enhancementMode === "adaptive"
+              ? "contrast-115 brightness-105"
+              : enhancementMode === "fog"
+              ? "contrast-130 brightness-95"
+              : ""
+          }`}
         >
           <source src={videoSource} type="video/mp4" />
         </video>
 
-        {/* Tactical Crosshair corner marks & OSD Overlay */}
+        {/* Real-time frame-accurate synchronised detection canvas */}
+        <VideoDetectionCanvas
+          videoRef={videoRef}
+          cameraIndex={cameraIndex}
+          cameraId={camera.id}
+          overlayMode={overlayMode}
+          highlightedTrackId={highlightedTrackId}
+        />
+
+        {/* Feed Metadata Watermark */}
+        <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-md border border-white/10 text-[9px] font-mono-data text-white/70">
+          Node {camera.roadGraphNodeId} · 30 FPS CFR
+        </div>
+
+        {/* Tactical Crosshair & Corner Marks */}
         <svg
           viewBox="0 0 640 360"
           className="w-full h-full object-cover pointer-events-none relative z-10"
-          xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Tactical Crosshair corner marks */}
+          {/* Subtle corner reticles */}
           <path
-            d="M 16 36 L 16 16 L 36 16 M 604 16 L 624 16 L 624 36 M 16 324 L 16 344 L 36 344 M 604 344 L 624 344 L 624 324"
+            d="M 12 28 L 12 12 L 28 12 M 612 12 L 628 12 L 628 28 M 12 332 L 12 348 L 28 348 M 612 348 L 628 348 L 628 332"
             fill="none"
-            stroke="rgba(0, 229, 255, 0.4)"
-            strokeWidth="1.5"
+            stroke="rgba(0, 229, 255, 0.45)"
+            strokeWidth="1.2"
           />
 
-          {/* Active Incident Alert Tactical Top HUD Banner */}
-          {activeAlert && (
-            <g className="animate-pulse">
+          {/* Small Event Chip (Persistent Candidate Only — Never 100% Accuracy) */}
+          {cameraAlert && (
+            <g>
               <rect
-                x="140"
+                x="160"
                 y="14"
-                width="360"
-                height="24"
-                fill={activeAlert.eventType === "accident_collision" ? "rgba(255, 59, 48, 0.95)" : "rgba(255, 149, 0, 0.9)"}
-                stroke="#FFFFFF"
-                strokeWidth="1.5"
+                width="320"
+                height="22"
+                fill="rgba(15, 23, 42, 0.88)"
+                stroke={cameraAlert.severity === "critical" ? "#EF4444" : "#F59E0B"}
+                strokeWidth="1.2"
                 rx="4"
               />
-              <circle cx="156" cy="26" r="4" fill="#FFFFFF" className="animate-ping" />
+              <circle
+                cx="174"
+                cy="25"
+                r="3.5"
+                fill={cameraAlert.severity === "critical" ? "#EF4444" : "#F59E0B"}
+              />
               <text
                 x="320"
-                y="30"
+                y="29"
                 textAnchor="middle"
                 fill="#FFFFFF"
-                fontSize="10"
+                fontSize="9"
                 fontFamily="JetBrains Mono, monospace"
                 fontWeight="bold"
-                letterSpacing="0.5"
               >
-                {activeAlert.eventType === "accident_collision"
-                  ? "🚨 ACCIDENT COLLISION DETECTED // 100% ACCURACY"
-                  : `⚠ INCIDENT DETECTED // ${activeAlert.eventType.toUpperCase().replace(/_/g, " ")}`}
+                {cameraAlert.type === "cloned_plate_suspect"
+                  ? `Cloned plate suspect · 0.94 · in review`
+                  : cameraAlert.type === "blacklist_hit"
+                  ? `Blacklist match · ${cameraAlert.plate} · in review`
+                  : `${cameraAlert.title.slice(0, 32)} · in review`}
               </text>
             </g>
           )}
 
-          {/* Center PTZ reticle */}
-          <circle
-            cx="320"
-            cy="180"
-            r="16"
-            fill="none"
-            stroke="rgba(0, 229, 255, 0.25)"
-            strokeWidth="1"
-          />
-          <line x1="305" y1="180" x2="335" y2="180" stroke="rgba(0, 229, 255, 0.4)" strokeWidth="1" />
-          <line x1="320" y1="165" x2="320" y2="195" stroke="rgba(0, 229, 255, 0.4)" strokeWidth="1" />
-
-          {/* Camera Live OSD Info Bar */}
-          <rect x="16" y="322" width="608" height="22" fill="rgba(7, 9, 14, 0.75)" rx="3" />
+          {/* Clean OSD Info Line */}
+          <rect x="12" y="326" width="616" height="20" fill="rgba(11, 15, 23, 0.75)" rx="3" />
           <text
-            x="26"
-            y="337"
+            x="22"
+            y="339"
             fill="#00E5FF"
-            fontSize="9"
+            fontSize="8.5"
             fontFamily="JetBrains Mono, monospace"
-            fontWeight="500"
+            fontWeight="bold"
           >
-            {camera.name.toUpperCase()} | {camera.resolution} | {camera.lensType} | BEARING: {camera.bearing}°
+            {camera.name.toUpperCase()} · NODE: {camera.roadGraphNodeId} · {camera.lensType}
           </text>
           <text
-            x="614"
-            y="337"
+            x="618"
+            y="339"
             textAnchor="end"
             fill="white"
-            fontSize="9"
+            fontSize="8.5"
             fontFamily="JetBrains Mono, monospace"
           >
-            {time}.{msTime}
+            {timeStr} IST
           </text>
         </svg>
 
-
-        {/* Hover Quick Action Overlay */}
-        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-[#07090E]/85 p-1 rounded-lg border border-[#1E2638] backdrop-blur-md z-20">
-          <button
-            onClick={() => setShowOverlays(!showOverlays)}
-            className={`p-1.5 rounded text-xs transition-colors cursor-pointer ${
-              isCvActive ? "text-[#00E5FF] bg-[#0091FF]/20" : "text-gray-400 hover:text-white"
-            }`}
-            title={isCvActive ? "Computer Vision AI Active (Click to Hide Boxes)" : "Clean Normal Feed (Click to Show AI Boxes)"}
-          >
-            <Layers size={12} />
-          </button>
+        {/* Hover Quick Action Buttons */}
+        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/85 p-1 rounded-lg border border-slate-700 backdrop-blur-md z-20">
           <button
             onClick={triggerSnapshot}
             className="p-1.5 rounded text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            title="Capture Snapshot"
+            title="Capture Audit Keyframe"
           >
             <CameraIcon size={12} />
           </button>
@@ -371,219 +303,18 @@ function CameraTile({
         </div>
       </div>
 
-      {/* Tile Footer */}
-      <div
-        className="flex items-center justify-between px-3 py-1.5 border-t bg-[#0B0F17]/80 text-[10px] font-mono-data flex-shrink-0"
-        style={{ borderColor: "var(--border-subtle)" }}
-      >
-        <div className="flex items-center gap-2 text-gray-400">
-          <span className="text-[#00E5FF] flex items-center gap-1">
+      {/* Tile Footer (Inference, OCR Consensus, Node ID) */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-t border-slate-800 bg-[#0B0F17] text-[10px] font-mono-data flex-shrink-0 text-slate-400">
+        <div className="flex items-center gap-2">
+          <span className="text-[#00E5FF] flex items-center gap-1 font-semibold">
             <Zap size={10} />
             Inference: 14ms
           </span>
-          <span className="text-gray-600">|</span>
-          <span>{camera.zone}</span>
+          <span className="text-slate-600">·</span>
+          <span>OCR: 5-frame consensus</span>
         </div>
-        <div className="text-gray-400">
-          PTZ: P{ptzAngle.pan}° T{ptzAngle.tilt}° Z{ptzAngle.zoom}.0x
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   TACTICAL GIS SATELLITE CITY MAP VIEW
-   ═══════════════════════════════════════════════════════════════════════ */
-function TacticalCityMap({ onSelectCamera }: { onSelectCamera: (camId: string) => void }) {
-  const alerts = useDashboardStore((s) => s.alerts);
-  const setSelectedAlertId = useDashboardStore((s) => s.setSelectedAlertId);
-
-  // Map coordinates normalized
-  const nodes = [
-    { id: "CAM-001", name: "Wardha Rd Junction", x: 420, y: 320, angle: 145 },
-    { id: "CAM-002", name: "Sitabuldi Interchange", x: 340, y: 190, angle: 45 },
-    { id: "CAM-003", name: "Dharampeth Circle", x: 190, y: 220, angle: 260 },
-    { id: "CAM-004", name: "Ambazari Promenade", x: 150, y: 350, angle: 210 },
-  ];
-
-  return (
-    <div
-      className="rounded-xl border overflow-hidden relative flex flex-col h-full scanline-texture"
-      style={{
-        background: "var(--bg-surface)",
-        borderColor: "var(--border-subtle)",
-      }}
-    >
-      {/* Map Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b bg-[#0B0F17]/90 z-10">
-        <div className="flex items-center gap-2">
-          <Compass size={14} className="text-[#00E5FF] animate-spin" style={{ animationDuration: "12s" }} />
-          <span className="text-xs font-semibold text-white">
-            NAGPUR SMART CITY // TACTICAL GIS SURVEILLANCE MAP
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono-data text-gray-400">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#10B981]" /> Camera Node
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#FF3B30] animate-live-pulse" /> Active Alert
-          </span>
-        </div>
-      </div>
-
-      {/* Map Canvas */}
-      <div className="relative flex-1 bg-[#05070C] overflow-hidden min-h-[460px]">
-        <svg
-          viewBox="0 0 800 500"
-          className="w-full h-full"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Subtle Radar Ring Overlays */}
-          <circle cx="400" cy="250" r="100" fill="none" stroke="rgba(0, 229, 255, 0.08)" strokeWidth="1" />
-          <circle cx="400" cy="250" r="200" fill="none" stroke="rgba(0, 229, 255, 0.06)" strokeWidth="1" />
-          <circle cx="400" cy="250" r="320" fill="none" stroke="rgba(0, 229, 255, 0.04)" strokeWidth="1" />
-
-          {/* Animated Radar Sweep Cone */}
-          <g className="animate-radar-sweep origin-center" style={{ transformOrigin: "400px 250px" }}>
-            <path
-              d="M 400 250 L 720 180 A 320 320 0 0 1 720 320 Z"
-              fill="url(#radar-grad)"
-              opacity="0.25"
-            />
-          </g>
-
-          <defs>
-            <linearGradient id="radar-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="100%" stopColor="#00E5FF" />
-            </linearGradient>
-          </defs>
-
-          {/* City Road Network Arterials */}
-          <g stroke="rgba(255,255,255,0.12)" strokeWidth="3" fill="none" strokeLinecap="round">
-            {/* NH44 / Wardha Road Arterial */}
-            <path d="M 340 50 L 340 190 L 420 320 L 500 480" stroke="#0091FF" strokeWidth="3" opacity="0.6" />
-            {/* West Ring Road */}
-            <path d="M 120 100 L 190 220 L 150 350 L 220 460" opacity="0.4" />
-            {/* Central Avenue Cross connector */}
-            <path d="M 190 220 L 340 190 L 580 180 L 720 220" opacity="0.5" strokeDasharray="6 4" />
-            {/* South Ring connector */}
-            <path d="M 150 350 L 420 320 L 680 340" opacity="0.4" />
-          </g>
-
-          {/* Road Labels */}
-          <text x="435" y="380" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="monospace">
-            WARDHA RD ARTERIAL
-          </text>
-          <text x="355" y="140" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="monospace">
-            SITABULDI CBD
-          </text>
-          <text x="110" y="210" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="monospace">
-            WEST HIGH COURT RD
-          </text>
-          <text x="70" y="370" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="monospace">
-            AMBAZARI CORRIDOR
-          </text>
-
-          {/* Camera Nodes with FOV Cones */}
-          {nodes.map((node) => {
-            const cam = cameras.find((c) => c.id === node.id);
-            const activeCamAlert = alerts.find(
-              (a) => a.cameraId === node.id && a.status === "new"
-            );
-
-            return (
-              <g
-                key={node.id}
-                className="cursor-pointer group"
-                onClick={() => onSelectCamera(node.id)}
-              >
-                {/* FOV Cone */}
-                <path
-                  d={`M ${node.x} ${node.y} L ${node.x + 80 * Math.cos(((node.angle - 35) * Math.PI) / 180)} ${
-                    node.y + 80 * Math.sin(((node.angle - 35) * Math.PI) / 180)
-                  } A 80 80 0 0 1 ${node.x + 80 * Math.cos(((node.angle + 35) * Math.PI) / 180)} ${
-                    node.y + 80 * Math.sin(((node.angle + 35) * Math.PI) / 180)
-                  } Z`}
-                  fill={activeCamAlert ? "rgba(255, 59, 48, 0.2)" : "rgba(0, 229, 255, 0.15)"}
-                  stroke={activeCamAlert ? "#FF3B30" : "#00E5FF"}
-                  strokeWidth="1"
-                  opacity="0.8"
-                />
-
-                {/* Pulsing Beacon if Alert */}
-                {activeCamAlert && (
-                  <circle
-                    cx={node.x}
-                    cy={node.y}
-                    r="16"
-                    fill="none"
-                    stroke="#FF3B30"
-                    strokeWidth="2"
-                    className="animate-beacon-ping"
-                  />
-                )}
-
-                {/* Node Center Pin */}
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r="7"
-                  fill="#0B0F17"
-                  stroke={activeCamAlert ? "#FF3B30" : "#10B981"}
-                  strokeWidth="2.5"
-                />
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r="3"
-                  fill={activeCamAlert ? "#FF3B30" : "#00E5FF"}
-                />
-
-                {/* Node Label Card */}
-                <g transform={`translate(${node.x + 12}, ${node.y - 14})`}>
-                  <rect
-                    x="0"
-                    y="0"
-                    width="140"
-                    height="28"
-                    fill="#0B0F17"
-                    stroke={activeCamAlert ? "#FF3B30" : "#1E2638"}
-                    strokeWidth="1"
-                    rx="4"
-                  />
-                  <text
-                    x="8"
-                    y="12"
-                    fill="white"
-                    fontSize="9"
-                    fontFamily="JetBrains Mono, monospace"
-                    fontWeight="bold"
-                  >
-                    {node.id} · {node.name.split(" ")[0]}
-                  </text>
-                  <text
-                    x="8"
-                    y="22"
-                    fill={activeCamAlert ? "#FF3B30" : "#10B981"}
-                    fontSize="8"
-                    fontFamily="JetBrains Mono, monospace"
-                  >
-                    {activeCamAlert ? "INCIDENT IN PROGRESS" : "STATUS: LIVE (30 FPS)"}
-                  </text>
-                </g>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Map Telemetry Card in Corner */}
-        <div className="absolute bottom-3 left-3 bg-[#0B0F17]/90 p-3 rounded-xl border border-[#1E2638] text-xs font-mono-data space-y-1 backdrop-blur-md">
-          <div className="text-[#00E5FF] font-semibold text-[11px]">NAGPUR GIS SECTOR 04</div>
-          <div className="text-gray-400 text-[10px]">COORDS: 21.1458° N, 79.0882° E</div>
-          <div className="text-gray-400 text-[10px]">CONNECTED NODES: 4/4 RTSP STREAMS</div>
+        <div className="text-slate-400 font-medium">
+          {camera.zone}
         </div>
       </div>
     </div>
@@ -591,127 +322,136 @@ function TacticalCityMap({ onSelectCamera }: { onSelectCamera: (camId: string) =
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   ALERT CARD COMPONENT
+   ALERT CARD COMPONENT (Review, Reject, Confirm, Notify)
    ═══════════════════════════════════════════════════════════════════════ */
 function AlertCard({
   alert,
-  isNew,
+  onSelect,
 }: {
-  alert: Alert;
-  isNew?: boolean;
+  alert: AlertItem;
+  onSelect: () => void;
 }) {
-  const setSelectedAlertId = useDashboardStore((s) => s.setSelectedAlertId);
-  const updateAlertStatus = useDashboardStore((s) => s.updateAlertStatus);
-  const dispatchUnit = useDashboardStore((s) => s.dispatchUnit);
+  const confirmAlert = useDashboardStore((s) => s.confirmAlert);
+  const rejectAlert = useDashboardStore((s) => s.rejectAlert);
+  const notifyUnit = useDashboardStore((s) => s.notifyUnit);
+  const role = useDashboardStore((s) => s.role);
 
-  const severityColor = getSeverityColor(alert.severity);
+  const badge = getAlertBadge(alert.type);
+  const isAuditor = role === "Auditor";
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      onClick={() => setSelectedAlertId(alert.id)}
-      className={`rounded-2xl border p-3.5 transition-all cursor-pointer relative overflow-hidden group shadow-2xs ${
-        isNew
-          ? "border-rose-300 bg-rose-50/70 shadow-md shadow-rose-100 animate-pulse"
-          : "border-slate-200/90 bg-white/90 hover:border-indigo-300 hover:shadow-md hover:bg-white"
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+      onClick={onSelect}
+      className={`rounded-2xl border p-3 transition-all cursor-pointer relative overflow-hidden group shadow-2xs ${
+        alert.status === "needs_review"
+          ? alert.severity === "critical"
+            ? "border-rose-300 bg-rose-50/60 shadow-xs hover:border-rose-400"
+            : "border-amber-300 bg-amber-50/50 shadow-xs hover:border-amber-400"
+          : alert.status === "confirmed"
+          ? "border-emerald-200 bg-emerald-50/40"
+          : "border-slate-200 bg-slate-50/60 opacity-75"
       }`}
     >
-      {/* Severity Indicator Bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
-        style={{ background: severityColor }}
-      />
-
-      <div className="flex gap-3 items-start pl-1">
-        {/* Thumbnail Preview with Keyframe Tag */}
+      <div className="flex gap-2.5 items-start">
+        {/* Keyframe Snapshot Preview */}
         <div className="relative w-16 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-900 border border-slate-200 shadow-xs">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={alert.snapshotUrl}
+            src="/snapshots/sample.jpg"
             alt="Incident keyframe snapshot"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <span className="absolute bottom-0.5 right-1 text-[7.5px] font-mono-data text-white font-bold tracking-tighter">
-            {alert.trackId}
-          </span>
+          {alert.trackId && (
+            <span className="absolute bottom-0.5 right-1 text-[7.5px] font-mono-data text-white font-bold bg-black/60 px-1 rounded">
+              {alert.trackId}
+            </span>
+          )}
         </div>
 
         {/* Info Column */}
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center justify-between gap-1">
-            <span className="text-xs font-bold text-slate-900 truncate group-hover:text-[#4F46E5] transition-colors">
-              {getEventLabel(alert.eventType)}
+            <span
+              className={`text-[9px] font-mono-data px-1.5 py-0.2 rounded-md border font-bold ${badge.color}`}
+            >
+              {badge.label}
             </span>
             <span className="text-[10px] font-mono-data text-slate-400 flex-shrink-0">
               {timeAgo(alert.detectedAt)}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] text-slate-500 truncate font-mono-data">
-            <span className="text-[#4F46E5] font-semibold">{alert.cameraId}</span>
-            <span>·</span>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 truncate">
+            {alert.plate && (
+              <span className="font-mono-data text-[#2563EB] bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200/80">
+                {alert.plate}
+              </span>
+            )}
             <span className="truncate">{alert.cameraName}</span>
           </div>
 
-          {alert.vehicleDetails && (
-            <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono-data pt-0.5">
-              <span
-                className={`px-1.5 py-0.5 rounded-md border font-medium ${
-                  alert.vehicleDetails.objectClass === "Auto Rickshaw"
-                    ? "bg-amber-50 border-amber-200 text-amber-700 font-bold"
-                    : "bg-slate-50 border-slate-200 text-slate-700"
-                }`}
-              >
-                {alert.vehicleDetails.objectClass === "Auto Rickshaw"
-                  ? "🛺 Auto-Rickshaw"
-                  : alert.vehicleDetails.objectClass}
-              </span>
-              {alert.vehicleDetails.licensePlate && (
-                <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-[#4F46E5] font-bold border border-indigo-200/80">
-                  {alert.vehicleDetails.licensePlate}
-                </span>
-              )}
+          <p className="text-[10.5px] text-slate-600 line-clamp-2 leading-relaxed">
+            {alert.reason}
+          </p>
+
+          {alert.trustScore !== undefined && (
+            <div className="text-[9.5px] font-mono-data text-slate-500 pt-0.5">
+              Link Trust: <span className="font-bold text-slate-700">{alert.trustScore.toFixed(2)}</span> ·{" "}
+              Status: <span className="font-semibold uppercase text-slate-800">{alert.status.replace("_", " ")}</span>
             </div>
           )}
         </div>
       </div>
 
-      {alert.status === "new" && (
-        <div className="flex border-t border-slate-100 bg-slate-50/80 rounded-b-xl -mx-3.5 -mb-3.5 mt-2.5 divide-x divide-slate-100">
+      {/* Action Buttons for Unconfirmed Alerts */}
+      {alert.status === "needs_review" && (
+        <div className="flex border-t border-slate-200/80 bg-white/80 rounded-b-xl -mx-3 -mb-3 mt-2 divide-x divide-slate-100">
           <button
+            disabled={isAuditor}
             onClick={(e) => {
               e.stopPropagation();
-              updateAlertStatus(alert.id, "acknowledged", "Operator");
+              confirmAlert(alert.id);
             }}
-            className="flex-1 flex items-center justify-center gap-1 py-2 text-[10px] font-bold text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
-          >
-            <Eye size={11} />
-            Ack
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatchUnit(alert.id, "PCR Van #08", "PCR Patrol");
-            }}
-            className="flex-1 flex items-center justify-center gap-1 py-2 text-[10px] font-bold text-[#4F46E5] hover:bg-indigo-50 transition-colors cursor-pointer"
-          >
-            <Send size={11} />
-            Dispatch
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              updateAlertStatus(alert.id, "resolved", "Operator");
-            }}
-            className="flex-1 flex items-center justify-center gap-1 py-2 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
+            title={isAuditor ? "Auditors have read-only access" : "Confirm alert validity"}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-emerald-600 transition-colors ${
+              isAuditor ? "opacity-40 cursor-not-allowed" : "hover:bg-emerald-50 cursor-pointer"
+            }`}
           >
             <Check size={11} />
-            Resolve
+            Confirm
+          </button>
+          <button
+            disabled={isAuditor}
+            onClick={(e) => {
+              e.stopPropagation();
+              rejectAlert(alert.id);
+            }}
+            title={isAuditor ? "Auditors have read-only access" : "Reject alert as false lead"}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-slate-500 transition-colors ${
+              isAuditor ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-100 cursor-pointer"
+            }`}
+          >
+            <X size={11} />
+            Reject
+          </button>
+          <button
+            disabled={isAuditor}
+            onClick={(e) => {
+              e.stopPropagation();
+              notifyUnit(alert.id, "PCR Patrol Unit 12");
+            }}
+            title={isAuditor ? "Auditors have read-only access" : "Notify field patrol with human confirmation"}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-[#2563EB] transition-colors ${
+              isAuditor ? "opacity-40 cursor-not-allowed" : "hover:bg-indigo-50 cursor-pointer"
+            }`}
+          >
+            <Send size={10} />
+            Notify Unit
           </button>
         </div>
       )}
@@ -720,137 +460,17 @@ function AlertCard({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   LIVE ALERT FEED PANEL
+   EVIDENCE INVESTIGATION DRAWER
    ═══════════════════════════════════════════════════════════════════════ */
-function LiveAlertFeed({ onManualWhatsApp }: { onManualWhatsApp?: () => void }) {
-  const alerts = useDashboardStore((s) => s.alerts);
-  const alertFilter = useDashboardStore((s) => s.alertFilter);
-  const setAlertFilter = useDashboardStore((s) => s.setAlertFilter);
-  const severityFilter = useDashboardStore((s) => s.severityFilter);
-  const setSeverityFilter = useDashboardStore((s) => s.setSeverityFilter);
-  const searchQuery = useDashboardStore((s) => s.searchQuery);
-  const setSearchQuery = useDashboardStore((s) => s.setSearchQuery);
-  const acknowledgeAll = useDashboardStore((s) => s.acknowledgeAll);
-
-  const filteredAlerts = useMemo(() => {
-    return alerts.filter((a) => {
-      if (alertFilter !== "all" && a.status !== alertFilter) return false;
-      if (severityFilter !== "all" && a.severity !== severityFilter) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesCam = a.cameraName.toLowerCase().includes(q);
-        const matchesEvent = getEventLabel(a.eventType).toLowerCase().includes(q);
-        const matchesPlate = a.vehicleDetails?.licensePlate?.toLowerCase().includes(q);
-        const matchesTrack = a.trackId.toLowerCase().includes(q);
-        if (!matchesCam && !matchesEvent && !matchesPlate && !matchesTrack) return false;
-      }
-      return true;
-    });
-  }, [alerts, alertFilter, severityFilter, searchQuery]);
-
-  const newAlertsCount = alerts.filter((a) => a.status === "new").length;
-
-  return (
-    <div className="rounded-2xl border border-slate-200/90 bg-white/85 backdrop-blur-xl h-full flex flex-col shadow-sm">
-      {/* Feed Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-white/90 rounded-t-2xl flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Radio size={14} className="text-[#EF4444] animate-live-pulse" />
-          <span className="text-xs font-bold text-slate-800">Live Incident Queue</span>
-          {newAlertsCount > 0 && (
-            <span className="px-1.5 py-0.2 text-[9px] font-mono-data font-bold rounded-full bg-[#EF4444] text-white">
-              {newAlertsCount}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onManualWhatsApp && (
-            <button
-              onClick={onManualWhatsApp}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono-data font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer shadow-2xs"
-              title="Send Immediate WhatsApp Alert to +91 93221 66721"
-            >
-              <MessageSquare size={11} className="text-emerald-600" />
-              <span>Send SOS</span>
-            </button>
-          )}
-          {newAlertsCount > 0 && (
-            <button
-              onClick={acknowledgeAll}
-              className="flex items-center gap-1 text-[10px] font-mono-data font-bold text-[#4F46E5] hover:underline cursor-pointer"
-            >
-              <CheckCheck size={12} />
-              Ack All
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Filter / Search Bar */}
-      <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex-shrink-0 space-y-2">
-        <div className="relative">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter CCTV, plate, or event..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-[#4F46E5] font-mono-data shadow-2xs"
-          />
-        </div>
-
-        <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-          {(["all", "new", "acknowledged", "resolved"] as const).map((st) => (
-            <button
-              key={st}
-              onClick={() => setAlertFilter(st)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-mono-data uppercase transition-all cursor-pointer flex-shrink-0 ${
-                alertFilter === st
-                  ? "bg-[#4F46E5] text-white font-bold shadow-xs"
-                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
-              }`}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Feed List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-        <AnimatePresence initial={false}>
-          {filteredAlerts.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-xs font-mono-data">
-              No matching incidents in queue
-            </div>
-          ) : (
-            filteredAlerts.slice(0, 35).map((alert, i) => (
-              <AlertCard key={`${alert.id}-${i}`} alert={alert} isNew={i === 0} />
-            ))
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   ALERT DETAIL & DISPATCH INVESTIGATION DRAWER
-   ═══════════════════════════════════════════════════════════════════════ */
-function AlertDetailSheet({ onOpenWhatsApp }: { onOpenWhatsApp?: (alert: Alert) => void }) {
-  const alerts = useDashboardStore((s) => s.alerts);
-  const selectedId = useDashboardStore((s) => s.selectedAlertId);
-  const setSelectedId = useDashboardStore((s) => s.setSelectedAlertId);
-  const updateStatus = useDashboardStore((s) => s.updateAlertStatus);
-  const addNote = useDashboardStore((s) => s.addNote);
-  const dispatchUnit = useDashboardStore((s) => s.dispatchUnit);
-
-  const alert = alerts.find((a) => a.id === selectedId);
-  const [noteText, setNoteText] = useState("");
-  const [selectedUnit, setSelectedUnit] = useState("PCR Van #08 (Sitabuldi)");
-
-  if (!alert) return null;
+function EvidenceDetailDrawer({
+  alert,
+  onClose,
+}: {
+  alert: AlertItem;
+  onClose: () => void;
+}) {
+  const evidenceChain = useDashboardStore((s) => s.evidenceChain);
+  const record = evidenceChain.find((r) => r.id === alert.evidenceRecordId) || evidenceChain[0];
 
   return (
     <AnimatePresence>
@@ -859,7 +479,7 @@ function AlertDetailSheet({ onOpenWhatsApp }: { onOpenWhatsApp?: (alert: Alert) 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex justify-end"
-        onClick={() => setSelectedId(null)}
+        onClick={onClose}
       >
         <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" />
 
@@ -874,65 +494,98 @@ function AlertDetailSheet({ onOpenWhatsApp }: { onOpenWhatsApp?: (alert: Alert) 
           {/* Header */}
           <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between sticky top-0 z-10">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Incident Investigation</h3>
+              <h3 className="text-sm font-bold text-slate-900">Cryptographic Evidence Panel</h3>
               <p className="text-[10px] text-slate-500 font-mono-data">{alert.id}</p>
             </div>
             <button
-              onClick={() => setSelectedId(null)}
+              onClick={onClose}
               className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200 cursor-pointer"
             >
               <X size={16} />
             </button>
           </div>
 
-          <div className="p-5 space-y-5 flex-1">
-            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-black shadow-md">
-              <img src={alert.snapshotUrl} alt="Incident Snapshot" className="w-full aspect-video object-cover" />
+          <div className="p-5 space-y-5 flex-1 font-mono-data text-xs">
+            {/* Keyframe Crops */}
+            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-black shadow-md relative aspect-video">
+              <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+                <source src={alert.snapshotUrl || "/videos/Tracksure-Video1st.mp4"} type="video/mp4" />
+              </video>
+              <div className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] text-white">
+                Best Laplacian Sharpness Crop ({alert.cameraName})
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-emerald-200 p-4 bg-emerald-50/70 flex items-center justify-between shadow-2xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                  <MessageSquare size={16} />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    Twilio Automated WhatsApp SOS
-                    <span className="text-[9px] font-mono-data px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-800 font-bold">
-                      ACTIVE
-                    </span>
+            {/* OCR Candidate Consensus Breakdown */}
+            <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/70 space-y-2.5">
+              <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Consensus OCR Recognition Votes
+              </div>
+              <div className="space-y-1.5">
+                {record?.metadata.ocrVotes.map((vote, i) => (
+                  <div key={i} className="flex items-center justify-between bg-white p-2 rounded-xl border border-slate-200">
+                    <span className="font-semibold text-slate-800">{vote.engine}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[#2563EB] bg-indigo-50 px-1.5 py-0.5 rounded">
+                        {vote.predictedPlate}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        ({Math.round(vote.confidence * 100)}% conf)
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono-data">
-                    Recipient: <span className="text-emerald-700 font-bold">+91 93221 66721</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Trust Breakdown (4 Inputs) */}
+            <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/70 space-y-2.5">
+              <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Link Trust Score Components
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <div className="text-slate-400">Plate Consensus</div>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5">
+                    {record?.metadata.trustBreakdown.plateConfidence.toFixed(2) || "0.94"}
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <div className="text-slate-400">Camera Integrity</div>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5">
+                    {record?.metadata.trustBreakdown.cameraTrust.toFixed(2) || "0.96"}
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <div className="text-slate-400">Physical Feasibility</div>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5">
+                    {record?.metadata.trustBreakdown.physicalFeasibility.toFixed(2) || "1.00"}
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <div className="text-slate-400">Appearance Agreement</div>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5">
+                    {record?.metadata.trustBreakdown.appearanceMatch.toFixed(2) || "0.92"}
                   </div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono-data font-bold text-indigo-700 px-2 py-1 rounded-lg bg-indigo-50 border border-indigo-200">
-                Auto-Dispatched
-              </span>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/70 space-y-3">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Rapid Response / Patrol Dispatch
-              </span>
-              <div className="flex gap-2">
-                <select
-                  value={selectedUnit}
-                  onChange={(e) => setSelectedUnit(e.target.value)}
-                  className="flex-1 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 px-3 py-2 outline-none font-mono-data shadow-2xs"
-                >
-                  <option>PCR Van #08 (Sitabuldi)</option>
-                  <option>Traffic Interceptor #03</option>
-                  <option>Municipal Tow Truck #02</option>
-                  <option>Quick Response Team (QRT-1)</option>
-                </select>
-                <button
-                  onClick={() => dispatchUnit(alert.id, selectedUnit, "PCR Patrol")}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors cursor-pointer shadow-xs"
-                >
-                  Dispatch
-                </button>
+            {/* Cryptographic Chain Integrity */}
+            <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  Tamper-Evident Hash Chain
+                </span>
+                <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <FileCheck2 size={11} />
+                  SHA-256 VERIFIED
+                </span>
+              </div>
+              <div className="space-y-1 text-[9px] text-slate-500 break-all bg-white p-2.5 rounded-xl border border-slate-200">
+                <div><strong className="text-slate-700">Record Hash:</strong> {record?.recordHash}</div>
+                <div><strong className="text-slate-700">Prev Hash:</strong> {record?.prevHash}</div>
+                <div><strong className="text-slate-700">Signer Key:</strong> {record?.signerKeyId}</div>
               </div>
             </div>
           </div>
@@ -943,392 +596,332 @@ function AlertDetailSheet({ onOpenWhatsApp }: { onOpenWhatsApp?: (alert: Alert) 
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   MAIN DASHBOARD PAGE COMPONENT
+   MAIN LIVE NETWORK PAGE
    ═══════════════════════════════════════════════════════════════════════ */
-export default function DashboardPage() {
+export default function LiveNetworkPage() {
+  const cameras = useDashboardStore((s) => s.cameras);
+  const alerts = useDashboardStore((s) => s.alerts);
+  const watchlist = useDashboardStore((s) => s.watchlist);
+  const addToWatchlist = useDashboardStore((s) => s.addToWatchlist);
+  const removeFromWatchlist = useDashboardStore((s) => s.removeFromWatchlist);
   const layoutMode = useDashboardStore((s) => s.layoutMode);
   const setLayoutMode = useDashboardStore((s) => s.setLayoutMode);
   const focusedCameraId = useDashboardStore((s) => s.focusedCameraId);
   const setFocusedCameraId = useDashboardStore((s) => s.setFocusedCameraId);
-  const selectedAlertId = useDashboardStore((s) => s.selectedAlertId);
-  const alerts = useDashboardStore((s) => s.alerts);
 
-  const autoDispatchedIds = useRef<Set<string>>(new Set());
-  const lastDispatchTimeRef = useRef<number>(0);
-  const [autoToast, setAutoToast] = useState<{
-    alert: Alert;
-    status: string;
-    sid?: string;
-  } | null>(null);
+  const [activeTab, setActiveTab] = useState<AlertReviewStatus | "all">("needs_review");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [newPlate, setNewPlate] = useState("");
+  const [newLabel, setNewLabel] = useState("");
 
-  // Automatic WhatsApp SOS Engine (Throttled to protect Twilio rate limits)
-  useEffect(() => {
-    const criticals = alerts.filter(
-      (a) =>
-        (a.severity === "critical" ||
-          a.eventType === "accident_collision" ||
-          a.eventType === "stopped_vehicle_accident") &&
-        !autoDispatchedIds.current.has(a.id)
-    );
-
-    if (criticals.length === 0) return;
-
-    const now = Date.now();
-    if (now - lastDispatchTimeRef.current < 20000) {
-      return; // Cooldown: 20 seconds between WhatsApp dispatches
-    }
-
-    const targetAlert = criticals[0];
-    autoDispatchedIds.current.add(targetAlert.id);
-    lastDispatchTimeRef.current = now;
-
-    fetch("/api/alerts/dispatch-whatsapp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        camera_id: targetAlert.cameraId,
-        camera_name: targetAlert.cameraName,
-        event_type: targetAlert.eventType,
-        severity: targetAlert.severity,
-        confidence: targetAlert.confidence,
-        track_id: targetAlert.trackId,
-        vehicle_details: targetAlert.vehicleDetails,
-        detected_at: targetAlert.detectedAt,
-        recipient_phone: "+919322166721",
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setAutoToast({
-            alert: targetAlert,
-            status: "delivered",
-            sid: data.sid,
-          });
-          setTimeout(() => setAutoToast(null), 8000);
-        } else {
-          console.warn("Twilio dispatch response:", data);
-        }
-      })
-      .catch((err) => {
-        console.error("Twilio Auto-Dispatch error:", err);
-      });
-  }, [alerts]);
-
-  const [showTwilioConfig, setShowTwilioConfig] = useState(false);
-  const [customSid, setCustomSid] = useState("");
-  const [customToken, setCustomToken] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCustomSid(localStorage.getItem("nexwatch_twilio_sid") || "");
-      setCustomToken(localStorage.getItem("nexwatch_twilio_token") || "");
-    }
-  }, []);
-
-  const triggerManualWhatsApp = async (alertOverride?: Alert) => {
-    const criticals = alerts.filter(
-      (a) =>
-        a.severity === "critical" ||
-        a.eventType === "accident_collision" ||
-        a.eventType === "stopped_vehicle_accident"
-    );
-    const chosen = alertOverride || criticals[0] || alerts[0];
-    if (!chosen) return;
-
-    const sid = customSid || (typeof window !== "undefined" ? localStorage.getItem("nexwatch_twilio_sid") || "" : "");
-    const token = customToken || (typeof window !== "undefined" ? localStorage.getItem("nexwatch_twilio_token") || "" : "");
-
-    try {
-      const res = await fetch("/api/alerts/dispatch-whatsapp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          camera_id: chosen.cameraId,
-          camera_name: chosen.cameraName,
-          event_type: chosen.eventType,
-          severity: "critical",
-          confidence: chosen.confidence || 0.99,
-          track_id: chosen.trackId,
-          vehicle_details: chosen.vehicleDetails,
-          detected_at: new Date().toISOString(),
-          recipient_phone: "+919322166721",
-          account_sid: sid,
-          auth_token: token,
-        }),
-      });
-      const data = await res.json();
-      setAutoToast({
-        alert: chosen,
-        status: data.success ? "delivered" : "error",
-        sid: data.sid || (data.warning ? "KEYS REQUIRED - CLICK TO CONFIGURE" : undefined),
-      });
-
-      if (!data.success && !sid) {
-        setShowTwilioConfig(true);
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter((a) => {
+      if (activeTab !== "all" && a.status !== activeTab) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesPlate = a.plate?.toLowerCase().includes(q);
+        const matchesCam = a.cameraName.toLowerCase().includes(q);
+        const matchesType = a.type.toLowerCase().includes(q);
+        const matchesReason = a.reason.toLowerCase().includes(q);
+        if (!matchesPlate && !matchesCam && !matchesType && !matchesReason) return false;
       }
-      setTimeout(() => setAutoToast(null), 8000);
-    } catch (err) {
-      console.error("Manual WhatsApp dispatch error:", err);
-    }
-  };
-
-  // Automated 10-Minute Recurring Routine + Instant Mount Dispatch
-  useEffect(() => {
-    const sendPeriodicSOS = async () => {
-      const criticals = alerts.filter(
-        (a) =>
-          a.severity === "critical" ||
-          a.eventType === "accident_collision" ||
-          a.eventType === "stopped_vehicle_accident"
-      );
-      const chosen = criticals[Math.floor(Math.random() * criticals.length)] || alerts[0];
-      if (!chosen) return;
-
-      const sid = typeof window !== "undefined" ? localStorage.getItem("nexwatch_twilio_sid") || "" : "";
-      const token = typeof window !== "undefined" ? localStorage.getItem("nexwatch_twilio_token") || "" : "";
-
-      try {
-        const res = await fetch("/api/alerts/dispatch-whatsapp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            camera_id: chosen.cameraId,
-            camera_name: chosen.cameraName,
-            event_type: chosen.eventType,
-            severity: "critical",
-            confidence: chosen.confidence || 0.99,
-            track_id: chosen.trackId,
-            vehicle_details: chosen.vehicleDetails,
-            detected_at: new Date().toISOString(),
-            recipient_phone: "+919322166721",
-            account_sid: sid,
-            auth_token: token,
-          }),
-        });
-        const data = await res.json();
-        setAutoToast({
-          alert: chosen,
-          status: data.success ? "delivered" : "error",
-          sid: data.sid || (data.warning ? "KEYS NEEDED ON RENDER" : undefined),
-        });
-        setTimeout(() => setAutoToast(null), 8000);
-      } catch (err) {
-        console.error("10-min interval dispatch error:", err);
-      }
-    };
-
-    // Trigger on mount after 2.5s and every 10 minutes
-    const initialTimer = setTimeout(sendPeriodicSOS, 2500);
-    const interval = setInterval(sendPeriodicSOS, 10 * 60 * 1000);
-    return () => {
-      clearTimeout(initialTimer);
-      clearInterval(interval);
-    };
-  }, [alerts]);
+      return true;
+    });
+  }, [alerts, activeTab, searchQuery]);
 
   const focusedCamera = cameras.find((c) => c.id === focusedCameraId) || cameras[0];
   const companionCameras = cameras.filter((c) => c.id !== focusedCameraId);
 
-  return (
-    <>
-      <AnimatePresence>
-        {autoToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-20 right-6 z-50 flex items-center gap-3.5 p-4 rounded-2xl border border-emerald-300 bg-white/95 shadow-2xl backdrop-blur-2xl text-slate-900 font-mono-data text-xs max-w-md"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 flex-shrink-0 animate-pulse shadow-xs">
-              <MessageSquare size={18} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span>Twilio WhatsApp SOS Dispatched</span>
-              </div>
-              <div className="text-slate-900 font-bold truncate mt-0.5 text-xs">
-                {getEventLabel(autoToast.alert.eventType)} · {autoToast.alert.cameraName}
-              </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">
-                Recipient: <span className="text-emerald-700 font-bold">+91 93221 66721</span>
-                {autoToast.sid && (
-                  <span className="ml-1 text-slate-400">({autoToast.sid.slice(0, 10)}...)</span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setAutoToast(null)}
-              className="p-1 text-slate-400 hover:text-slate-900 rounded-lg cursor-pointer"
-            >
-              <X size={15} />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  const handleSelectAlert = (alert: AlertItem) => {
+    setSelectedAlert(alert);
+    if (alert.cameraId) {
+      setFocusedCameraId(alert.cameraId);
+    }
+  };
 
-      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-96px)] min-h-[640px]">
-        <div className="lg:w-[72%] xl:w-[74%] flex-shrink-0 flex flex-col h-full min-h-[440px]">
-          {layoutMode === "grid" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 h-full overflow-y-auto">
-              {cameras.map((cam) => (
-                <CameraTile
+  const handleAddWatchlist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPlate.trim()) return;
+    addToWatchlist(newPlate, newLabel);
+    setNewPlate("");
+    setNewLabel("");
+  };
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-104px)] min-h-[640px]">
+      {/* LEFT COLUMN: Camera Network Grid (74%) */}
+      <div className="lg:w-[72%] xl:w-[74%] flex-shrink-0 flex flex-col h-full min-h-[440px]">
+        {layoutMode === "grid" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 h-full overflow-y-auto">
+            {cameras.map((cam) => (
+              <CameraTile
+                key={cam.id}
+                camera={cam}
+                highlightedTrackId={selectedAlert?.cameraId === cam.id ? selectedAlert.trackId : undefined}
+                onFocus={() => {
+                  setFocusedCameraId(cam.id);
+                  setLayoutMode("focus");
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {layoutMode === "focus" && (
+          <div className="flex flex-col xl:flex-row gap-3.5 h-full overflow-y-auto">
+            <div className="xl:w-[70%] h-full flex flex-col">
+              <CameraTile
+                camera={focusedCamera}
+                isFocused
+                highlightedTrackId={selectedAlert?.cameraId === focusedCamera.id ? selectedAlert.trackId : undefined}
+              />
+            </div>
+
+            <div className="xl:w-[30%] flex flex-col gap-3 overflow-y-auto">
+              <div className="text-[11px] font-mono-data text-slate-500 uppercase tracking-wider px-1">
+                Auxiliary Network Feeds
+              </div>
+              {companionCameras.map((cam) => (
+                <div
                   key={cam.id}
-                  camera={cam}
-                  onFocus={() => {
-                    setFocusedCameraId(cam.id);
-                    setLayoutMode("focus");
-                  }}
-                />
+                  onClick={() => setFocusedCameraId(cam.id)}
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <CameraTile
+                    camera={cam}
+                    highlightedTrackId={selectedAlert?.cameraId === cam.id ? selectedAlert.trackId : undefined}
+                  />
+                </div>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {layoutMode === "focus" && (
-            <div className="flex flex-col xl:flex-row gap-3.5 h-full overflow-y-auto">
-              <div className="xl:w-[70%] h-full flex flex-col">
-                <CameraTile camera={focusedCamera} isFocused />
+        {layoutMode === "map" && (
+          <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-4 h-full flex flex-col shadow-sm">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2">
+                <Compass size={15} className="text-[#2563EB]" />
+                <h3 className="text-xs font-bold text-slate-800">
+                  Smart City Multi-Camera Network Nodes
+                </h3>
               </div>
-
-              <div className="xl:w-[30%] flex flex-col gap-3 overflow-y-auto">
-                <div className="text-[11px] font-mono-data text-gray-400 uppercase tracking-wider px-1">
-                  Auxiliary Node Feeds
-                </div>
-                {companionCameras.map((cam) => (
-                  <div
-                    key={cam.id}
-                    onClick={() => setFocusedCameraId(cam.id)}
-                    className="cursor-pointer transition-transform hover:scale-[1.02]"
-                  >
-                    <CameraTile camera={cam} />
-                  </div>
-                ))}
-              </div>
+              <span className="text-[10px] font-mono-data text-slate-500">
+                4 Active Calibrated Sensor Nodes
+              </span>
             </div>
-          )}
 
-          {layoutMode === "map" && (
-            <TacticalCityMap
-              onSelectCamera={(camId) => {
-                setFocusedCameraId(camId);
-                setLayoutMode("focus");
-              }}
-            />
-          )}
-        </div>
+            <div className="flex-1 bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center">
+              <svg viewBox="0 0 800 480" className="w-full h-full">
+                {/* Arterial Corridor Road Lines */}
+                <path d="M 180 80 L 320 200 L 480 300 L 640 420" stroke="#334155" strokeWidth="6" fill="none" />
+                <path d="M 180 80 L 320 200 L 480 300 L 640 420" stroke="#00E5FF" strokeWidth="2" strokeDasharray="8 6" fill="none" opacity="0.6" />
 
-        {/* RIGHT COLUMN: Live Alert Feed */}
-        <div className="lg:w-[28%] xl:w-[26%] h-full flex flex-col min-h-[440px]">
-          <LiveAlertFeed onManualWhatsApp={triggerManualWhatsApp} />
+                {cameras.map((c, idx) => {
+                  const x = 180 + idx * 150;
+                  const y = 80 + idx * 110;
+                  return (
+                    <g key={c.id} className="cursor-pointer" onClick={() => setFocusedCameraId(c.id)}>
+                      <circle cx={x} cy={y} r="18" fill="rgba(0, 229, 255, 0.15)" stroke="#00E5FF" strokeWidth="1.5" />
+                      <circle cx={x} cy={y} r="6" fill={c.healthStatus === "COMPROMISED" ? "#EF4444" : "#10B981"} />
+                      <text x={x + 24} y={y - 4} fill="white" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                        {c.name} ({c.roadGraphNodeId})
+                      </text>
+                      <text x={x + 24} y={y + 10} fill="#94A3B8" fontSize="8.5" fontFamily="monospace">
+                        Trust: {c.trustScore.toFixed(2)} · {c.healthStatus}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* RIGHT COLUMN: Alerts & Review Queue (26%) */}
+      <div className="lg:w-[28%] xl:w-[26%] h-full flex flex-col min-h-[440px]">
+        <div className="rounded-2xl border border-slate-200/90 bg-white/85 backdrop-blur-xl h-full flex flex-col shadow-sm">
+          {/* Queue Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-white/90 rounded-t-2xl flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <ShieldAlert size={15} className="text-[#2563EB]" />
+              <span className="text-xs font-bold text-slate-800">Alerts & Review Queue</span>
+              {filteredAlerts.length > 0 && (
+                <span className="px-1.5 py-0.2 text-[9px] font-mono-data font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                  {filteredAlerts.length}
+                </span>
+              )}
+            </div>
+            
+            {/* Demo Watchlist Button */}
+            <button
+              onClick={() => setShowWatchlistModal(true)}
+              className="px-2 py-0.5 rounded-md text-[10px] font-mono-data font-bold bg-indigo-50 hover:bg-indigo-100 text-[#2563EB] border border-indigo-200/80 flex items-center gap-1 cursor-pointer transition-colors"
+              title="Configure demo watchlist plates"
+            >
+              <ListOrdered size={11} />
+              <span>Watchlist ({watchlist.length})</span>
+            </button>
+          </div>
+
+          {/* Search & Status Filter Tabs */}
+          <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex-shrink-0 space-y-2">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search plate, node, or reason..."
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-[#2563EB] font-mono-data shadow-2xs"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+              {(["all", "needs_review", "confirmed", "rejected"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono-data capitalize transition-all cursor-pointer flex-shrink-0 ${
+                    activeTab === tab
+                      ? "bg-[#2563EB] text-white font-bold shadow-xs"
+                      : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+                  }`}
+                >
+                  {tab === "needs_review" ? "Needs Review" : tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Alert Cards Feed List */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+            <AnimatePresence initial={false}>
+              {filteredAlerts.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 text-xs font-mono-data">
+                  No incidents matching current criteria
+                </div>
+              ) : (
+                filteredAlerts.map((alert) => (
+                  <AlertCard
+                    key={alert.id}
+                    alert={alert}
+                    onSelect={() => handleSelectAlert(alert)}
+                  />
+                ))
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-      {/* Slide-over Inspection Sheet */}
-      {selectedAlertId && <AlertDetailSheet onOpenWhatsApp={(alert) => triggerManualWhatsApp(alert)} />}
+      {/* Slide-over Evidence Detail Drawer */}
+      {selectedAlert && (
+        <EvidenceDetailDrawer
+          alert={selectedAlert}
+          onClose={() => setSelectedAlert(null)}
+        />
+      )}
 
-      {/* Twilio & WhatsApp Emergency Dispatch Configuration Modal */}
-      {showTwilioConfig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 space-y-5 text-slate-900"
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-                  <MessageSquare size={16} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Twilio WhatsApp SOS Dispatch</h3>
-                  <p className="text-[10px] text-slate-500 font-mono-data">Outbound Emergency Messaging</p>
-                </div>
+      {/* Demo Watchlist Management Modal */}
+      {showWatchlistModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/70">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={16} className="text-[#2563EB]" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Demo Watchlist (Operator-Configured)
+                </h3>
               </div>
               <button
-                onClick={() => setShowTwilioConfig(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                onClick={() => setShowWatchlistModal(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="space-y-3 font-mono-data text-xs">
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-600">
-                  Verified Recipient (Your Number)
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value="+91 93221 66721"
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-emerald-700 font-bold outline-none"
-                />
+            <div className="p-5 space-y-4">
+              <div className="text-xs text-slate-600 leading-relaxed bg-blue-50 border border-blue-200/70 p-3 rounded-xl">
+                Vehicles with plates matching this list are flagged in real time across all cameras with a prominent <strong>WATCHLIST HIT</strong> reticle and entered into the Review Queue.
               </div>
 
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-600">
-                  Twilio Account SID (Starts with AC...)
-                </label>
+              {/* Add Plate Form */}
+              <form onSubmit={handleAddWatchlist} className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Paste your Account SID here"
-                  value={customSid}
-                  onChange={(e) => {
-                    setCustomSid(e.target.value);
-                    if (typeof window !== "undefined") localStorage.setItem("nexwatch_twilio_sid", e.target.value);
-                  }}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 outline-none focus:border-indigo-500 shadow-2xs"
+                  placeholder="e.g. MH31CB8061"
+                  value={newPlate}
+                  onChange={(e) => setNewPlate(e.target.value.toUpperCase())}
+                  className="flex-1 px-3 py-2 text-xs font-mono-data font-bold rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-[#2563EB]"
                 />
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-600">
-                  Twilio Auth Token
-                </label>
                 <input
-                  type="password"
-                  placeholder="Paste your Auth Token here"
-                  value={customToken}
-                  onChange={(e) => {
-                    setCustomToken(e.target.value);
-                    if (typeof window !== "undefined") localStorage.setItem("nexwatch_twilio_token", e.target.value);
-                  }}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 outline-none focus:border-indigo-500 shadow-2xs"
+                  type="text"
+                  placeholder="Reason / Notice tag"
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-[#2563EB]"
                 />
+                <button
+                  type="submit"
+                  className="px-3.5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Plus size={13} />
+                  Add
+                </button>
+              </form>
+
+              {/* Watchlist Table */}
+              <div className="max-h-60 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">
+                {watchlist.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-slate-400 font-mono-data">
+                    Watchlist is empty. Add a plate above.
+                  </div>
+                ) : (
+                  watchlist.map((w) => (
+                    <div
+                      key={w.id}
+                      className="flex items-center justify-between p-3 hover:bg-slate-50/70 transition-colors"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono-data font-bold text-xs text-slate-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                            {w.plate}
+                          </span>
+                          <span className="text-xs font-medium text-slate-700">{w.label}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono-data">
+                          Added: {new Date(w.addedAt).toLocaleTimeString()}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeFromWatchlist(w.id)}
+                        className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg transition-colors cursor-pointer"
+                        title="Remove from watchlist"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
-            <div className="space-y-2 pt-2">
+            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
               <button
-                onClick={() => {
-                  setShowTwilioConfig(false);
-                  triggerManualWhatsApp();
-                }}
-                className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#4F46E5] text-white hover:bg-[#4338CA] transition-colors cursor-pointer shadow-md shadow-indigo-500/25 flex items-center justify-center gap-2"
+                onClick={() => setShowWatchlistModal(false)}
+                className="px-4 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
-                <Zap size={14} />
-                <span>Transmit Twilio API Outbound SOS</span>
+                Close
               </button>
-
-              <a
-                href={`https://api.whatsapp.com/send?phone=919322166721&text=${encodeURIComponent(
-                  "🚨 *NEXWATCH CRITICAL ACCIDENT SOS* 🚨\n━━━━━━━━━━━━━━━━━━━━━\n📍 *CCTV Area:* Dharampeth Traffic Circle (CAM-003)\n⚠️ *Incident:* ACCIDENT / COLLISION\n🔴 *Severity:* CRITICAL (98% AI Conf)\n🚗 *Target Vehicle:* Auto Rickshaw (TRK-301)\n🔢 *License Plate:* *MH 31 TC 3341*\n⏱️ *Detection Time:* " +
-                    new Date().toLocaleTimeString("en-IN") +
-                    " IST\n⚡ *Action Mandate:* 🚨 DISPATCH AMBULANCE & TRAFFIC POLICE IMMEDIATELY\n━━━━━━━━━━━━━━━━━━━━━\n🔗 *Live CCTV Feeds:* https://cityeye-frontend.onrender.com/dashboard"
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2"
-              >
-                <MessageSquare size={14} />
-                <span>1-Tap Instant WhatsApp Web SOS</span>
-              </a>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

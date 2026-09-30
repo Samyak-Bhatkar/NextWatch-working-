@@ -1,0 +1,99 @@
+{
+  "project": "TrackSure - PS 26127 Multi-Camera ANPR & Trajectory Tracking",
+  "version": "1.0.0",
+  "videos": [
+    {
+      "video_file": "public/videos/Tracksure-Video1st.mp4",
+      "resolution": "1920x1080",
+      "fps": 30.0,
+      "total_frames": 3588,
+      "duration_sec": 119.6,
+      "codec": "h264",
+      "camera_id": "TODO: e.g. CAM-01",
+      "name": "TODO: Camera 1 Name / Junction",
+      "lat": "TODO: Latitude (e.g. 19.0760)",
+      "lon": "TODO: Longitude (e.g. 72.8777)",
+      "start_time_iso": "TODO: Video 1 recording start timestamp ISO-8601 (e.g. 2026-09-30T09:00:00Z)",
+      "expected_direction": "TODO: Normal traffic flow heading (e.g. Northbound / 0 deg / Southbound / 180 deg)",
+      "road_graph_node": "TODO: Graph node ID (e.g. Node-1)",
+      "contact_sheet": "reports/contact_sheets/Tracksure-Video1st_contact_sheet.jpg"
+    },
+    {
+      "video_file": "public/videos/Tracksure-Video2nd.mp4",
+      "resolution": "1920x1080",
+      "fps": 25.0,
+      "total_frames": 476,
+      "duration_sec": 19.04,
+      "codec": "h264",
+      "camera_id": "TODO: e.g. CAM-02",
+      "name": "TODO: Camera 2 Name / Junction",
+      "lat": "TODO: Latitude",
+      "lon": "TODO: Longitude",
+      "start_time_iso": "TODO: Video 2 recording start timestamp ISO-8601",
+      "expected_direction": "TODO: Normal traffic flow heading",
+      "road_graph_node": "TODO: Graph node ID (e.g. Node-2)",
+      "contact_sheet": "reports/contact_sheets/Tracksure-Video2nd_contact_sheet.jpg"
+    },
+    {
+      "video_file": "public/videos/Tracksure-Video3rd.mp4",
+      "resolution": "1920x1080",
+      "fps": 25.0,
+      "total_frames": 1422,
+      "duration_sec": 56.88,
+      "codec": "h264",
+      "camera_id": "TODO: e.g. CAM-03",
+      "name": "TODO: Camera 3 Name / Junction",
+      "lat": "TODO: Latitude",
+      "lon": "TODO: Longitude",
+      "start_time_iso": "TODO: Video 3 recording start timestamp ISO-8601",
+      "expected_direction": "TODO: Normal traffic flow heading",
+      "road_graph_node": "TODO: Graph node ID (e.g. Node-3)",
+      "contact_sheet": "reports/contact_sheets/Tracksure-Video3rd_contact_sheet.jpg"
+    },
+    {
+      "video_file": "public/videos/Tracksure-Video4th.mp4",
+      "resolution": "1920x1080",
+      "fps": 60.0,
+      "total_frames": 3600,
+      "duration_sec": 60.0,
+      "codec": "h264",
+      "camera_id": "TODO: e.g. CAM-04",
+      "name": "TODO: Camera 4 Name / Junction",
+      "lat": "TODO: Latitude",
+      "lon": "TODO: Longitude",
+      "start_time_iso": "TODO: Video 4 recording start timestamp ISO-8601",
+      "expected_direction": "TODO: Normal traffic flow heading",
+      "road_graph_node": "TODO: Graph node ID (e.g. Node-4)",
+      "contact_sheet": "reports/contact_sheets/Tracksure-Video4th_contact_sheet.jpg"
+    }
+  ],
+  "road_network": {
+    "nodes": [
+      { "id": "TODO: Node-1", "camera_id": "TODO: CAM-01" },
+      { "id": "TODO: Node-2", "camera_id": "TODO: CAM-02" },
+      { "id": "TODO: Node-3", "camera_id": "TODO: CAM-03" },
+      { "id": "TODO: Node-4", "camera_id": "TODO: CAM-04" }
+    ],
+    "distance_matrix_m": {
+      "CAM-01_to_CAM-02": "TODO: road distance in meters (e.g. 450)",
+      "CAM-02_to_CAM-03": "TODO: road distance in meters (e.g. 620)",
+      "CAM-03_to_CAM-04": "TODO: road distance in meters (e.g. 380)",
+      "matrix_pairwise": {
+        "CAM-01": { "CAM-01": 0, "CAM-02": "TODO", "CAM-03": "TODO", "CAM-04": "TODO" },
+        "CAM-02": { "CAM-01": "TODO", "CAM-02": 0, "CAM-03": "TODO", "CAM-04": "TODO" },
+        "CAM-03": { "CAM-01": "TODO", "CAM-02": "TODO", "CAM-03": 0, "CAM-04": "TODO" },
+        "CAM-04": { "CAM-01": "TODO", "CAM-02": "TODO", "CAM-03": "TODO", "CAM-04": 0 }
+      }
+    },
+    "speed_feasibility_kmh": {
+      "min_plausible_speed_kmh": "TODO: e.g. 5.0 (gridlock / crawl threshold)",
+      "max_plausible_speed_kmh": "TODO: e.g. 110.0 (maximum realistic urban transit speed)"
+    }
+  },
+  "ground_truth_targets": {
+    "hero_vehicle_plate": "TODO: Target vehicle license plate to follow (if known, or we will detect top candidates)",
+    "known_cross_camera_vehicles": [
+      "TODO: list any known plates appearing in 2+ cameras"
+    ]
+  }
+}

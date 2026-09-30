@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NexWatch — AI Video Analytics for Smart Cities",
+  title: "TrackSure — Verified City Trajectories",
   description:
-    "AI-powered video analytics that turns your city's existing CCTV network into a real-time alert system — detecting incidents in seconds.",
+    "City-Wide AI Engine for Multi-Camera ANPR Trajectory Tracking and Urban Traffic Analytics with Link Trust Verification and Camera Integrity (SIH PS 26127).",
 };
 
 export default function RootLayout({

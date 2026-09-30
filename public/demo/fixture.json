@@ -1,0 +1,520 @@
+{
+  "project": "TrackSure",
+  "problemStatement": "SIH PS 26127: Multi-Camera ANPR Trajectory Tracking & Urban Traffic Analytics",
+  "generatedAt": "2026-09-30T09:00:00.000Z",
+  "disclaimer": "Recorded demo footage. Attacks are simulated.",
+  "heroPlate": "MH31CB8061",
+  "cameras": [
+    {
+      "id": "CAM-001",
+      "name": "Camera A - Junction North",
+      "roadGraphNodeId": "RN-101",
+      "zone": "North Arterial Gateway",
+      "location": { "lat": 21.1612, "lng": 79.0834 },
+      "trustScore": 0.96,
+      "healthStatus": "HEALTHY",
+      "fps": 30,
+      "resolution": "1920×1080 (FHD)",
+      "bitrate": "6.8 Mbps",
+      "bearing": 145,
+      "fovAngle": 78,
+      "lensType": "Calibrated 8.0mm Fixed Lens",
+      "streamUrl": "/videos/Tracksure-Video1st.mp4",
+      "cleanSrc": "/videos/Tracksure-Video1st.mp4",
+      "trackedSrc": "/videos/Tracksure-Video1st.mp4",
+      "isDemoFeed": true,
+      "integrityChecks": {
+        "freezeDetected": false,
+        "loopDetected": false,
+        "blackoutDetected": false,
+        "sceneDriftDetected": false,
+        "clockSkewMs": 8,
+        "lastCheckedAt": "2026-09-30T08:59:50.000Z"
+      }
+    },
+    {
+      "id": "CAM-002",
+      "name": "Camera B - Mid Arterial",
+      "roadGraphNodeId": "RN-102",
+      "zone": "Central Corridor Midpoint",
+      "location": { "lat": 21.1485, "lng": 79.0792 },
+      "trustScore": 0.94,
+      "healthStatus": "HEALTHY",
+      "fps": 25,
+      "resolution": "1920×1080 (FHD)",
+      "bitrate": "6.2 Mbps",
+      "bearing": 160,
+      "fovAngle": 82,
+      "lensType": "Calibrated 6.0mm Fixed Lens",
+      "streamUrl": "/videos/Tracksure-Video2nd.mp4",
+      "cleanSrc": "/videos/Tracksure-Video2nd.mp4",
+      "trackedSrc": "/videos/Tracksure-Video2nd.mp4",
+      "isDemoFeed": true,
+      "integrityChecks": {
+        "freezeDetected": false,
+        "loopDetected": false,
+        "blackoutDetected": false,
+        "sceneDriftDetected": false,
+        "clockSkewMs": 11,
+        "lastCheckedAt": "2026-09-30T08:59:52.000Z"
+      }
+    },
+    {
+      "id": "CAM-003",
+      "name": "Camera C - Commercial Ring",
+      "roadGraphNodeId": "RN-103",
+      "zone": "West Commercial Intersect",
+      "location": { "lat": 21.1342, "lng": 79.0688 },
+      "trustScore": 0.91,
+      "healthStatus": "HEALTHY",
+      "fps": 25,
+      "resolution": "1920×1080 (FHD)",
+      "bitrate": "7.1 Mbps",
+      "bearing": 210,
+      "fovAngle": 85,
+      "lensType": "Calibrated 4.0mm Wide Lens",
+      "streamUrl": "/videos/Tracksure-Video3rd.mp4",
+      "cleanSrc": "/videos/Tracksure-Video3rd.mp4",
+      "trackedSrc": "/videos/Tracksure-Video3rd.mp4",
+      "isDemoFeed": true,
+      "integrityChecks": {
+        "freezeDetected": false,
+        "loopDetected": false,
+        "blackoutDetected": false,
+        "sceneDriftDetected": false,
+        "clockSkewMs": 14,
+        "lastCheckedAt": "2026-09-30T08:59:54.000Z"
+      }
+    },
+    {
+      "id": "CAM-004",
+      "name": "Camera D - Express Link",
+      "roadGraphNodeId": "RN-104",
+      "zone": "Outer Ring Expressway",
+      "location": { "lat": 21.1189, "lng": 79.0521 },
+      "trustScore": 0.95,
+      "healthStatus": "HEALTHY",
+      "fps": 60,
+      "resolution": "1920×1080 (FHD)",
+      "bitrate": "5.5 Mbps",
+      "bearing": 195,
+      "fovAngle": 90,
+      "lensType": "Calibrated 12.0mm Telephoto",
+      "streamUrl": "/videos/Tracksure-Video4th.mp4",
+      "cleanSrc": "/videos/Tracksure-Video4th.mp4",
+      "trackedSrc": "/videos/Tracksure-Video4th.mp4",
+      "isDemoFeed": true,
+      "integrityChecks": {
+        "freezeDetected": false,
+        "loopDetected": false,
+        "blackoutDetected": false,
+        "sceneDriftDetected": false,
+        "clockSkewMs": 6,
+        "lastCheckedAt": "2026-09-30T08:59:55.000Z"
+      }
+    }
+  ],
+  "trajectory": {
+    "plate": "MH31CB8061",
+    "normalizedPlate": "MH31CB8061",
+    "vehicleClass": "Car (Sedan)",
+    "vehicleColor": "Metallic Silver",
+    "firstSeen": "2026-09-30T08:42:15.000Z",
+    "lastSeen": "2026-09-30T08:47:15.000Z",
+    "hasClonedAnomaly": false,
+    "sightings": [
+      {
+        "id": "SGT-001",
+        "timestamp": "2026-09-30T08:42:15.000Z",
+        "cameraId": "CAM-001",
+        "cameraName": "Camera A - Junction North",
+        "roadGraphNodeId": "RN-101",
+        "coordinates": { "lat": 21.1612, "lng": 79.0834 },
+        "plate": "MH31CB8061",
+        "trackId": "TRK-482",
+        "plateConfidence": 0.95,
+        "cameraTrust": 0.96,
+        "speedKmph": 46.2,
+        "vehicleClass": "Car (Sedan)",
+        "vehicleColor": "Metallic Silver",
+        "directionHeading": 160,
+        "evidenceRecordId": "EVD-REC-001",
+        "snapshotUrl": "/videos/Tracksure-Video1st.mp4",
+        "cropUrl": "/snapshots/sample.jpg",
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31CB8061", "confidence": 0.96, "normalizedPlate": "MH31CB8061" },
+          { "engine": "TrOCR-PlateSmall", "predictedPlate": "MH31CB8061", "confidence": 0.94, "normalizedPlate": "MH31CB8061" },
+          { "engine": "FastPlate-CRNN", "predictedPlate": "MH31CB8061", "confidence": 0.95, "normalizedPlate": "MH31CB8061" }
+        ]
+      },
+      {
+        "id": "SGT-002",
+        "timestamp": "2026-09-30T08:44:37.000Z",
+        "cameraId": "CAM-002",
+        "cameraName": "Camera B - Mid Arterial",
+        "roadGraphNodeId": "RN-102",
+        "coordinates": { "lat": 21.1485, "lng": 79.0792 },
+        "plate": "MH31CB8061",
+        "trackId": "TRK-219",
+        "plateConfidence": 0.93,
+        "cameraTrust": 0.94,
+        "speedKmph": 49.5,
+        "vehicleClass": "Car (Sedan)",
+        "vehicleColor": "Metallic Silver",
+        "directionHeading": 175,
+        "evidenceRecordId": "EVD-REC-002",
+        "snapshotUrl": "/videos/Tracksure-Video2nd.mp4",
+        "cropUrl": "/snapshots/sample.jpg",
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31CB8061", "confidence": 0.94, "normalizedPlate": "MH31CB8061" },
+          { "engine": "TrOCR-PlateSmall", "predictedPlate": "MH31CB8061", "confidence": 0.91, "normalizedPlate": "MH31CB8061" },
+          { "engine": "FastPlate-CRNN", "predictedPlate": "MH31CB8061", "confidence": 0.93, "normalizedPlate": "MH31CB8061" }
+        ]
+      },
+      {
+        "id": "SGT-003",
+        "timestamp": "2026-09-30T08:47:15.000Z",
+        "cameraId": "CAM-003",
+        "cameraName": "Camera C - Commercial Ring",
+        "roadGraphNodeId": "RN-103",
+        "coordinates": { "lat": 21.1342, "lng": 79.0688 },
+        "plate": "MH31CB8061",
+        "trackId": "TRK-704",
+        "plateConfidence": 0.91,
+        "cameraTrust": 0.91,
+        "speedKmph": 47.8,
+        "vehicleClass": "Car (Sedan)",
+        "vehicleColor": "Metallic Silver",
+        "directionHeading": 210,
+        "evidenceRecordId": "EVD-REC-003",
+        "snapshotUrl": "/videos/Tracksure-Video3rd.mp4",
+        "cropUrl": "/snapshots/sample.jpg",
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31CB8061", "confidence": 0.92, "normalizedPlate": "MH31CB8061" },
+          { "engine": "TrOCR-PlateSmall", "predictedPlate": "MH31CB8061", "confidence": 0.89, "normalizedPlate": "MH31CB8061" },
+          { "engine": "FastPlate-CRNN", "predictedPlate": "MH31CB8061", "confidence": 0.91, "normalizedPlate": "MH31CB8061" }
+        ]
+      }
+    ],
+    "links": [
+      {
+        "id": "LNK-001",
+        "fromCameraId": "CAM-001",
+        "toCameraId": "CAM-002",
+        "distanceMeters": 1840,
+        "timeGapSeconds": 142,
+        "calculatedSpeedKmph": 46.6,
+        "isPhysicallyFeasible": true,
+        "linkTrustScore": 0.93,
+        "trustBreakdown": {
+          "plateConfidence": 0.94,
+          "cameraTrust": 0.95,
+          "physicalFeasibility": 0.98,
+          "appearanceMatch": 0.91,
+          "compositeScore": 0.93
+        },
+        "whyExplanation": "Road distance 1,840m covered in 142s (46.6 km/h) matches corridor speed profile (30-65 km/h) with 0.94 OCR consensus agreement and 0.91 HSV appearance match.",
+        "evidenceRecordId": "EVD-REC-002"
+      },
+      {
+        "id": "LNK-002",
+        "fromCameraId": "CAM-002",
+        "toCameraId": "CAM-003",
+        "distanceMeters": 2120,
+        "timeGapSeconds": 158,
+        "calculatedSpeedKmph": 48.3,
+        "isPhysicallyFeasible": true,
+        "linkTrustScore": 0.89,
+        "trustBreakdown": {
+          "plateConfidence": 0.92,
+          "cameraTrust": 0.92,
+          "physicalFeasibility": 0.97,
+          "appearanceMatch": 0.88,
+          "compositeScore": 0.89
+        },
+        "whyExplanation": "Road distance 2,120m covered in 158s (48.3 km/h). Consistent vehicle heading and color signature across intersection junction RN-102 to RN-103.",
+        "evidenceRecordId": "EVD-REC-003"
+      }
+    ]
+  },
+  "alerts": [
+    {
+      "id": "ALT-26127-01",
+      "type": "blacklist_hit",
+      "title": "Blacklist Hit: Stolen Vehicle Registry",
+      "severity": "critical",
+      "status": "needs_review",
+      "detectedAt": "2026-09-30T08:48:10.000Z",
+      "cameraId": "CAM-001",
+      "cameraName": "Camera A - Junction North",
+      "roadGraphNodeId": "RN-101",
+      "plate": "MH31CB8061",
+      "trackId": "TRK-482",
+      "trustScore": 0.95,
+      "reason": "Plate matched active police stolen vehicle notice REG-2026-IND-881 with 0.95 consensus confidence across 3 OCR engines.",
+      "snapshotUrl": "/videos/Tracksure-Video1st.mp4",
+      "evidenceRecordId": "EVD-REC-001"
+    },
+    {
+      "id": "ALT-26127-02",
+      "type": "low_trust_link",
+      "title": "Low-Trust Link: Ambiguous OCR Candidate",
+      "severity": "medium",
+      "status": "needs_review",
+      "detectedAt": "2026-09-30T08:45:22.000Z",
+      "cameraId": "CAM-003",
+      "cameraName": "Camera C - Commercial Ring",
+      "roadGraphNodeId": "RN-103",
+      "plate": "MH31CB8064",
+      "trackId": "TRK-708",
+      "trustScore": 0.68,
+      "reason": "Character vote split between '1' and '4' on final digit; appearance match (0.84) requires manual human supervisor confirmation.",
+      "snapshotUrl": "/videos/Tracksure-Video3rd.mp4",
+      "evidenceRecordId": "EVD-REC-003"
+    },
+    {
+      "id": "ALT-26127-03",
+      "type": "behaviour_event",
+      "title": "Persistent Stopped Vehicle Hazard",
+      "severity": "high",
+      "status": "needs_review",
+      "detectedAt": "2026-09-30T08:46:05.000Z",
+      "cameraId": "CAM-003",
+      "cameraName": "Camera C - Commercial Ring",
+      "roadGraphNodeId": "RN-103",
+      "plate": "MH31EQ4892",
+      "trackId": "TRK-712",
+      "trustScore": 0.84,
+      "reason": "Vehicle stationary in primary active transit lane for 52 seconds; speed near 0 km/h with high tracking confidence.",
+      "snapshotUrl": "/videos/Tracksure-Video3rd.mp4",
+      "evidenceRecordId": "EVD-REC-004"
+    },
+    {
+      "id": "ALT-26127-04",
+      "type": "feed_integrity",
+      "title": "Feed Integrity: Minor Clock Skew Resolved",
+      "severity": "low",
+      "status": "confirmed",
+      "detectedAt": "2026-09-30T07:15:00.000Z",
+      "cameraId": "CAM-004",
+      "cameraName": "Camera D - Express Link",
+      "roadGraphNodeId": "RN-104",
+      "trustScore": 0.95,
+      "reason": "NTP clock skew deviation of +42ms detected and resynchronised by edge agent.",
+      "snapshotUrl": "/videos/Tracksure-Video4th.mp4",
+      "confirmedBy": "Supervisor Desk",
+      "confirmedAt": "2026-09-30T07:16:30.000Z"
+    }
+  ],
+  "evidenceChain": [
+    {
+      "id": "EVD-REC-001",
+      "timestamp": "2026-09-30T08:42:15.000Z",
+      "cameraId": "CAM-001",
+      "cameraName": "Camera A - Junction North",
+      "plate": "MH31CB8061",
+      "trackId": "TRK-482",
+      "sourceFrameHash": "7f8b9e1d2c3a4b5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f",
+      "cropHash": "3a4b5c6d7e8f90123456789abcdef0123456789abcdef0123456789abcdef012",
+      "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "recordHash": "a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0",
+      "signatureStatus": "verified",
+      "signerKeyId": "ed25519-edge-node-cam001",
+      "snapshotUrl": "/videos/Tracksure-Video1st.mp4",
+      "cropUrl": "/snapshots/sample.jpg",
+      "metadata": {
+        "roadNodeId": "RN-101",
+        "speedKmph": 46.2,
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31CB8061", "confidence": 0.96, "normalizedPlate": "MH31CB8061" },
+          { "engine": "TrOCR-PlateSmall", "predictedPlate": "MH31CB8061", "confidence": 0.94, "normalizedPlate": "MH31CB8061" }
+        ],
+        "trustBreakdown": {
+          "plateConfidence": 0.95,
+          "cameraTrust": 0.96,
+          "physicalFeasibility": 1.0,
+          "appearanceMatch": 0.95,
+          "compositeScore": 0.96
+        }
+      }
+    },
+    {
+      "id": "EVD-REC-002",
+      "timestamp": "2026-09-30T08:44:37.000Z",
+      "cameraId": "CAM-002",
+      "cameraName": "Camera B - Mid Arterial",
+      "plate": "MH31CB8061",
+      "trackId": "TRK-219",
+      "sourceFrameHash": "c4d5e6f7a8b90123456789abcdef0123456789abcdef0123456789abcdef0123",
+      "cropHash": "89abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567",
+      "prevHash": "a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0",
+      "recordHash": "b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef01",
+      "signatureStatus": "verified",
+      "signerKeyId": "ed25519-edge-node-cam002",
+      "snapshotUrl": "/videos/Tracksure-Video2nd.mp4",
+      "cropUrl": "/snapshots/sample.jpg",
+      "metadata": {
+        "roadNodeId": "RN-102",
+        "speedKmph": 49.5,
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31CB8061", "confidence": 0.94, "normalizedPlate": "MH31CB8061" },
+          { "engine": "TrOCR-PlateSmall", "predictedPlate": "MH31CB8061", "confidence": 0.91, "normalizedPlate": "MH31CB8061" }
+        ],
+        "trustBreakdown": {
+          "plateConfidence": 0.93,
+          "cameraTrust": 0.94,
+          "physicalFeasibility": 0.98,
+          "appearanceMatch": 0.91,
+          "compositeScore": 0.93
+        }
+      }
+    },
+    {
+      "id": "EVD-REC-003",
+      "timestamp": "2026-09-30T08:47:15.000Z",
+      "cameraId": "CAM-003",
+      "cameraName": "Camera C - Commercial Ring",
+      "plate": "MH31CB8061",
+      "trackId": "TRK-704",
+      "sourceFrameHash": "f1e2d3c4b5a60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0",
+      "cropHash": "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123",
+      "prevHash": "b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef01",
+      "recordHash": "c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef012",
+      "signatureStatus": "verified",
+      "signerKeyId": "ed25519-edge-node-cam003",
+      "snapshotUrl": "/videos/Tracksure-Video3rd.mp4",
+      "cropUrl": "/snapshots/sample.jpg",
+      "metadata": {
+        "roadNodeId": "RN-103",
+        "speedKmph": 47.8,
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31CB8061", "confidence": 0.92, "normalizedPlate": "MH31CB8061" },
+          { "engine": "TrOCR-PlateSmall", "predictedPlate": "MH31CB8061", "confidence": 0.89, "normalizedPlate": "MH31CB8061" }
+        ],
+        "trustBreakdown": {
+          "plateConfidence": 0.91,
+          "cameraTrust": 0.91,
+          "physicalFeasibility": 0.97,
+          "appearanceMatch": 0.88,
+          "compositeScore": 0.89
+        }
+      }
+    },
+    {
+      "id": "EVD-REC-004",
+      "timestamp": "2026-09-30T08:46:05.000Z",
+      "cameraId": "CAM-003",
+      "cameraName": "Camera C - Commercial Ring",
+      "plate": "MH31EQ4892",
+      "trackId": "TRK-712",
+      "sourceFrameHash": "d8e9f0123456789abcdef0123456789abcdef0123456789abcdef0123456789a",
+      "cropHash": "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+      "prevHash": "c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef012",
+      "recordHash": "d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0123",
+      "signatureStatus": "verified",
+      "signerKeyId": "ed25519-edge-node-cam003",
+      "snapshotUrl": "/videos/Tracksure-Video3rd.mp4",
+      "cropUrl": "/snapshots/sample.jpg",
+      "metadata": {
+        "roadNodeId": "RN-103",
+        "speedKmph": 2.1,
+        "ocrVotes": [
+          { "engine": "PaddleOCR-v4", "predictedPlate": "MH31EQ4892", "confidence": 0.94, "normalizedPlate": "MH31EQ4892" }
+        ],
+        "trustBreakdown": {
+          "plateConfidence": 0.94,
+          "cameraTrust": 0.91,
+          "physicalFeasibility": 0.95,
+          "appearanceMatch": 0.89,
+          "compositeScore": 0.92
+        }
+      }
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "AUDIT-001",
+      "timestamp": "2026-09-30T08:35:12.000Z",
+      "operatorName": "Insp. Sharma",
+      "role": "Supervisor",
+      "searchedPlate": "MH31CB8061",
+      "caseNumber": "CASE-2026-NAG-4102",
+      "purpose": "Investigation of stolen commercial sedan reported at North Gateway",
+      "ipAddress": "10.24.4.15",
+      "actionTaken": "Full 3-Camera Trajectory Generated & Evidence Exported"
+    },
+    {
+      "id": "AUDIT-002",
+      "timestamp": "2026-09-30T07:22:45.000Z",
+      "operatorName": "Officer Patel",
+      "role": "Operator",
+      "searchedPlate": "MH31EQ4892",
+      "caseNumber": "CASE-2026-NAG-3984",
+      "purpose": "Cross-verification of hazard stopped vehicle obstructing traffic",
+      "ipAddress": "10.24.4.18",
+      "actionTaken": "Dispatched Municipal Tow Unit"
+    }
+  ],
+  "cityAnalytics": {
+    "totalPlateReadings": 142850,
+    "averageConsensusConfidence": 0.942,
+    "verifiedTrajectoryLinks": 38412,
+    "activeBottlenecksCount": 3,
+    "odMatrix": [
+      { "originNode": "RN-101 (North)", "destinationNode": "RN-102 (Mid)", "count": 4820, "avgTravelTimeSec": 145, "peakHourFlow": 820 },
+      { "originNode": "RN-101 (North)", "destinationNode": "RN-103 (Commercial)", "count": 2940, "avgTravelTimeSec": 310, "peakHourFlow": 510 },
+      { "originNode": "RN-102 (Mid)", "destinationNode": "RN-103 (Commercial)", "count": 5120, "avgTravelTimeSec": 162, "peakHourFlow": 940 },
+      { "originNode": "RN-103 (Commercial)", "destinationNode": "RN-104 (Express)", "count": 3780, "avgTravelTimeSec": 210, "peakHourFlow": 670 }
+    ],
+    "bottlenecks": [
+      {
+        "id": "BTN-001",
+        "corridor": "Commercial Ring Segment RN-103",
+        "segment": "RN-102 -> RN-103",
+        "congestionIndex": 84,
+        "avgSpeedKmph": 18.4,
+        "normalSpeedKmph": 45.0,
+        "rootCause": "stopped_vehicle",
+        "rootCauseDescription": "Immobilized vehicle TRK-712 blocking right lane (52s persistence)",
+        "detectedAt": "2026-09-30T08:46:05.000Z"
+      },
+      {
+        "id": "BTN-002",
+        "corridor": "North Arterial Merge RN-101",
+        "segment": "RN-101 Entry",
+        "congestionIndex": 72,
+        "avgSpeedKmph": 24.2,
+        "normalSpeedKmph": 50.0,
+        "rootCause": "high_volume",
+        "rootCauseDescription": "Peak morning inflow surge exceeding lane capacity threshold (820 veh/h)",
+        "detectedAt": "2026-09-30T08:40:00.000Z"
+      },
+      {
+        "id": "BTN-003",
+        "corridor": "Express Connector RN-104",
+        "segment": "RN-103 -> RN-104",
+        "congestionIndex": 61,
+        "avgSpeedKmph": 29.5,
+        "normalSpeedKmph": 60.0,
+        "rootCause": "illegal_parking",
+        "rootCauseDescription": "Unauthorised delivery staging in curb lane reducing effective roadway",
+        "detectedAt": "2026-09-30T08:32:00.000Z"
+      }
+    ],
+    "densityTimeSeries": [
+      { "hour": "06:00", "nodeA_B": 180, "nodeB_C": 210, "nodeC_D": 140 },
+      { "hour": "07:00", "nodeA_B": 420, "nodeB_C": 480, "nodeC_D": 310 },
+      { "hour": "08:00", "nodeA_B": 820, "nodeB_C": 940, "nodeC_D": 670 },
+      { "hour": "09:00", "nodeA_B": 790, "nodeB_C": 880, "nodeC_D": 640 },
+      { "hour": "10:00", "nodeA_B": 540, "nodeB_C": 610, "nodeC_D": 450 },
+      { "hour": "11:00", "nodeA_B": 490, "nodeB_C": 520, "nodeC_D": 410 }
+    ],
+    "recentAnonymizedSightings": [
+      { "plateHash": "SHA256: 7f8b9e1d2c3a...", "corridor": "RN-101 -> RN-102", "timestamp": "08:47:12", "speedKmph": 48.2, "trustScore": 0.94 },
+      { "plateHash": "SHA256: 3a4b5c6d7e8f...", "corridor": "RN-102 -> RN-103", "timestamp": "08:46:58", "speedKmph": 44.5, "trustScore": 0.91 },
+      { "plateHash": "SHA256: b2c3d4e5f607...", "corridor": "RN-101 -> RN-102", "timestamp": "08:46:40", "speedKmph": 51.0, "trustScore": 0.96 },
+      { "plateHash": "SHA256: c3d4e5f60718...", "corridor": "RN-103 -> RN-104", "timestamp": "08:46:25", "speedKmph": 49.8, "trustScore": 0.89 },
+      { "plateHash": "SHA256: d4e5f6071829...", "corridor": "RN-102 -> RN-103", "timestamp": "08:46:05", "speedKmph": 18.4, "trustScore": 0.88 }
+    ]
+  }
+}

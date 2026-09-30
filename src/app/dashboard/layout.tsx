@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { useDashboardStore } from "@/lib/store";
 import { useSimulatedSocket } from "@/lib/simulated-socket";
-import { cameras } from "@/lib/mock-data";
-import { VisionMode, LayoutMode, UserRole } from "@/lib/types";
+import { UserRole, OverlayMode, EnhancementMode } from "@/lib/types";
 import {
   ChevronLeft,
   ChevronDown,
@@ -14,13 +13,13 @@ import {
   LayoutGrid,
   Maximize2,
   Map,
-  Eye,
-  Flame,
-  Moon,
-  Volume2,
-  VolumeX,
   ShieldCheck,
   Layers,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Sliders,
+  Tv,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -30,19 +29,21 @@ function DashboardNav() {
   const setRole = useDashboardStore((s) => s.setRole);
   const layoutMode = useDashboardStore((s) => s.layoutMode);
   const setLayoutMode = useDashboardStore((s) => s.setLayoutMode);
-  const visionMode = useDashboardStore((s) => s.visionMode);
-  const setVisionMode = useDashboardStore((s) => s.setVisionMode);
+  const overlayMode = useDashboardStore((s) => s.overlayMode);
+  const setOverlayMode = useDashboardStore((s) => s.setOverlayMode);
+  const enhancementMode = useDashboardStore((s) => s.enhancementMode);
+  const setEnhancementMode = useDashboardStore((s) => s.setEnhancementMode);
   const soundAlerts = useDashboardStore((s) => s.soundAlerts);
   const toggleSoundAlerts = useDashboardStore((s) => s.toggleSoundAlerts);
+  const presenterMode = useDashboardStore((s) => s.presenterMode);
+  const togglePresenterMode = useDashboardStore((s) => s.togglePresenterMode);
   const alerts = useDashboardStore((s) => s.alerts);
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [showVisionMenu, setShowVisionMenu] = useState(false);
+  const [showEnhanceMenu, setShowEnhanceMenu] = useState(false);
   const [time, setTime] = useState("");
 
-  const criticalAlertsCount = alerts.filter(
-    (a) => a.status === "new" && (a.severity === "critical" || a.severity === "high")
-  ).length;
+  const needsReviewCount = alerts.filter((a) => a.status === "needs_review").length;
 
   useEffect(() => {
     function tick() {
@@ -61,50 +62,25 @@ function DashboardNav() {
   }, []);
 
   const navLinks = [
-    { href: "/dashboard", label: "Surveillance" },
-    { href: "/dashboard/events", label: "Live Stream" },
-    { href: "/dashboard/analytics", label: "Analytics" },
-    { href: "/dashboard/admin", label: "Admin" },
+    { href: "/dashboard", label: "Live Network" },
+    { href: "/dashboard/trajectory", label: "Trajectory Search" },
+    { href: "/dashboard/analytics", label: "City Analytics" },
+    { href: "/dashboard/integrity", label: "Integrity & Evidence" },
+    { href: "/dashboard/demo", label: "Demo Tools" },
   ];
 
-  const visionModes: {
-    mode: VisionMode;
-    label: string;
-    description: string;
-    icon: React.ElementType;
-  }[] = [
-    {
-      mode: "cv",
-      label: "Computer Vision",
-      description: "YOLO AI Detection & Bounding Boxes",
-      icon: Layers,
-    },
-    {
-      mode: "optical",
-      label: "Optical (Clean Feed)",
-      description: "Normal Camera Feed (No Overlays)",
-      icon: Eye,
-    },
-    {
-      mode: "thermal",
-      label: "FLIR Thermal",
-      description: "Infrared Thermal Spectrum",
-      icon: Flame,
-    },
-    {
-      mode: "night",
-      label: "Phosphor NVG",
-      description: "Night Vision Mode",
-      icon: Moon,
-    },
+  const enhancementOptions: { mode: EnhancementMode; label: string; desc: string }[] = [
+    { mode: "off", label: "Enhancement: Off", desc: "Native optical raw pixels" },
+    { mode: "adaptive", label: "Adaptive CLAHE", desc: "Auto-contrast for low-light crops" },
+    { mode: "night", label: "Night Sensor Boost", desc: "Gamma correction & noise floor filtering" },
+    { mode: "fog", label: "Dehaze / Defog", desc: "Dark channel prior transmission recovery" },
   ];
 
-  const currentVision = visionModes.find((v) => v.mode === visionMode) || visionModes[0];
-  const CurrentVisionIcon = currentVision.icon;
+  const currentEnhance = enhancementOptions.find((e) => e.mode === enhancementMode) || enhancementOptions[0];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 h-16 transition-colors shadow-xs">
-      {/* LEFT: Aesthetic Logo & Back to Home */}
+    <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/85 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 h-16 transition-colors shadow-xs select-none">
+      {/* LEFT: Logo & Back Link */}
       <div className="flex items-center gap-3 lg:gap-4">
         <Link
           href="/"
@@ -114,33 +90,33 @@ function DashboardNav() {
           <span className="hidden sm:inline font-medium">Home</span>
         </Link>
         <div className="w-px h-5 bg-slate-200" />
-
-        <Link href="/">
+        <Link href="/dashboard">
           <Logo size="sm" />
         </Link>
       </div>
 
-      {/* CENTER: Reliable Clean Navigation Tabs */}
-      <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-slate-100/80 border border-slate-200/80 shadow-inner">
+      {/* CENTER: Navigation Tabs */}
+      <nav className="hidden xl:flex items-center gap-1 p-1 rounded-full bg-slate-100/80 border border-slate-200/80 shadow-inner">
         {navLinks.map((link) => {
           const active = pathname === link.href;
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all relative flex items-center ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all relative flex items-center ${
                 active
-                  ? "bg-white text-[#4F46E5] shadow-xs border border-slate-200/60"
+                  ? "bg-white text-[#2563EB] shadow-xs border border-slate-200/70"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
               {link.label}
-              {link.href === "/dashboard" && criticalAlertsCount > 0 && (
+              {link.href === "/dashboard" && needsReviewCount > 0 && (
                 <span
                   suppressHydrationWarning
-                  className="ml-1.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono-data font-bold bg-[#EF4444] text-white animate-pulse"
+                  className="ml-1.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono-data font-bold bg-[#EF4444] text-white"
+                  title={`${needsReviewCount} incidents awaiting human verification`}
                 >
-                  {criticalAlertsCount}
+                  {needsReviewCount}
                 </span>
               )}
             </Link>
@@ -148,19 +124,19 @@ function DashboardNav() {
         })}
       </nav>
 
-      {/* RIGHT: Layout Modes, Vision Shaders & Role Switch */}
-      <div className="flex items-center gap-2 md:gap-3">
-        {/* Layout Switcher (only visible on dashboard view) */}
+      {/* RIGHT: Layout & Dual Vision Controls + Role Clearance */}
+      <div className="flex items-center gap-2 md:gap-2.5">
+        {/* Layout Switcher (Grid / Focus / Map) */}
         {pathname === "/dashboard" && (
           <div className="hidden sm:flex items-center p-0.5 rounded-lg bg-slate-100 border border-slate-200">
             <button
               onClick={() => setLayoutMode("grid")}
               className={`p-1.5 rounded-md text-xs transition-all cursor-pointer ${
                 layoutMode === "grid"
-                  ? "bg-white text-[#4F46E5] shadow-xs font-bold"
+                  ? "bg-white text-[#2563EB] shadow-xs font-bold"
                   : "text-slate-500 hover:text-slate-900"
               }`}
-              title="2x2 Multi-Grid View"
+              title="2x2 Multi-Camera Grid"
             >
               <LayoutGrid size={13} />
             </button>
@@ -168,10 +144,10 @@ function DashboardNav() {
               onClick={() => setLayoutMode("focus")}
               className={`p-1.5 rounded-md text-xs transition-all cursor-pointer ${
                 layoutMode === "focus"
-                  ? "bg-white text-[#4F46E5] shadow-xs font-bold"
+                  ? "bg-white text-[#2563EB] shadow-xs font-bold"
                   : "text-slate-500 hover:text-slate-900"
               }`}
-              title="Focus 1-Major + 3-Minor View"
+              title="Focus 1-Major + Companion Feeds"
             >
               <Maximize2 size={13} />
             </button>
@@ -179,57 +155,76 @@ function DashboardNav() {
               onClick={() => setLayoutMode("map")}
               className={`p-1.5 rounded-md text-xs transition-all cursor-pointer ${
                 layoutMode === "map"
-                  ? "bg-white text-[#4F46E5] shadow-xs font-bold"
+                  ? "bg-white text-[#2563EB] shadow-xs font-bold"
                   : "text-slate-500 hover:text-slate-900"
               }`}
-              title="Tactical GIS Satellite Map"
+              title="City Corridor Map View"
             >
               <Map size={13} />
             </button>
           </div>
         )}
 
-        {/* Vision Mode Selector Dropdown */}
+        {/* Control 1: Overlay (Detections | Clean) */}
+        <div className="hidden md:flex items-center p-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-mono-data">
+          <button
+            onClick={() => setOverlayMode("detections")}
+            className={`px-2.5 py-1 rounded-full transition-all cursor-pointer font-bold ${
+              overlayMode === "detections"
+                ? "bg-white text-[#2563EB] shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+            title="Display verified vehicle bounding boxes, consensus plates, and confidence"
+          >
+            Detections
+          </button>
+          <button
+            onClick={() => setOverlayMode("clean")}
+            className={`px-2.5 py-1 rounded-full transition-all cursor-pointer font-bold ${
+              overlayMode === "clean"
+                ? "bg-white text-slate-800 shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+            title="Clean raw camera optical feed"
+          >
+            Clean
+          </button>
+        </div>
+
+        {/* Control 2: Enhancement (Off | Adaptive | Night | Fog) */}
         <div className="relative">
           <button
-            onClick={() => setShowVisionMenu(!showVisionMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono-data transition-all cursor-pointer border bg-white border-slate-200 text-slate-800 shadow-xs hover:border-slate-300"
-            title="Switch Vision Filter & Computer Vision AI"
+            onClick={() => setShowEnhanceMenu(!showEnhanceMenu)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-mono-data transition-all cursor-pointer border bg-white border-slate-200 text-slate-800 shadow-xs hover:border-slate-300"
+            title="Image enhancement pipeline applied to plate crops"
           >
-            <CurrentVisionIcon size={13} className={visionMode === "cv" ? "text-[#4F46E5]" : "text-slate-500"} />
-            <span className="hidden sm:inline font-medium">{currentVision.label}</span>
+            <Sparkles size={12} className={enhancementMode !== "off" ? "text-amber-500" : "text-slate-400"} />
+            <span className="hidden lg:inline text-[11px] font-medium">{currentEnhance.label}</span>
             <ChevronDown size={11} className="text-slate-400" />
           </button>
 
-          {showVisionMenu && (
-            <div className="absolute right-0 mt-1.5 rounded-2xl p-1.5 min-w-[240px] z-50 shadow-xl border border-slate-200 bg-white/95 backdrop-blur-xl">
-              <div className="px-2.5 py-1 text-[10px] uppercase font-mono-data text-slate-400 font-bold border-b border-slate-100 mb-1 flex items-center justify-between">
-                <span>Sensor Spectrum & AI</span>
-                <span className="text-[9px] text-[#4F46E5]">YOLOv11</span>
+          {showEnhanceMenu && (
+            <div className="absolute right-0 mt-1.5 rounded-2xl p-1.5 min-w-[230px] z-50 shadow-xl border border-slate-200 bg-white/95 backdrop-blur-xl">
+              <div className="px-2.5 py-1 text-[10px] uppercase font-mono-data text-slate-400 font-bold border-b border-slate-100 mb-1">
+                Plate Crop Enhancement
               </div>
-              {visionModes.map((v) => {
-                const Icon = v.icon;
-                const active = v.mode === visionMode;
+              {enhancementOptions.map((e) => {
+                const active = e.mode === enhancementMode;
                 return (
                   <button
-                    key={v.mode}
+                    key={e.mode}
                     onClick={() => {
-                      setVisionMode(v.mode);
-                      setShowVisionMenu(false);
+                      setEnhancementMode(e.mode);
+                      setShowEnhanceMenu(false);
                     }}
-                    className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    className={`w-full flex flex-col p-2 rounded-xl text-left transition-all cursor-pointer ${
                       active
-                        ? "bg-indigo-50 text-[#4F46E5] border border-indigo-200/60"
+                        ? "bg-indigo-50 text-[#2563EB] border border-indigo-200/60"
                         : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    <Icon size={15} className={`mt-0.5 ${active ? "text-[#4F46E5]" : "text-slate-400"}`} />
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold leading-tight">{v.label}</div>
-                      <div className="text-[10px] text-slate-500 font-mono-data truncate mt-0.5">
-                        {v.description}
-                      </div>
-                    </div>
+                    <span className="text-xs font-semibold">{e.label}</span>
+                    <span className="text-[10px] text-slate-500 font-mono-data mt-0.5">{e.desc}</span>
                   </button>
                 );
               })}
@@ -237,13 +232,22 @@ function DashboardNav() {
           )}
         </div>
 
-        {/* Audio Mute/Unmute Toggle */}
+        {/* Presenter Mode Toggle */}
+        <button
+          onClick={togglePresenterMode}
+          className={`p-1.5 rounded-full border transition-all cursor-pointer shadow-xs ${
+            presenterMode ? "bg-indigo-50 border-indigo-300 text-indigo-700" : "bg-white border-slate-200 text-slate-500 hover:text-slate-900"
+          }`}
+          title={presenterMode ? "Presenter Mode ON (Larger fonts, streamlined view)" : "Enable Presenter Mode"}
+        >
+          <Tv size={13} />
+        </button>
+
+        {/* Audio Mute/Unmute */}
         <button
           onClick={toggleSoundAlerts}
-          className={`p-2 rounded-full border transition-all cursor-pointer shadow-xs ${
-            soundAlerts
-              ? "bg-white border-slate-200 text-[#4F46E5]"
-              : "bg-slate-100 border-slate-200 text-slate-400"
+          className={`p-1.5 rounded-full border transition-all cursor-pointer shadow-xs ${
+            soundAlerts ? "bg-white border-slate-200 text-[#2563EB]" : "bg-slate-100 border-slate-200 text-slate-400"
           }`}
           title={soundAlerts ? "Sound Alerts Active" : "Sound Alerts Muted"}
         >
@@ -251,7 +255,7 @@ function DashboardNav() {
         </button>
 
         {/* Live Clock */}
-        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-mono-data text-slate-700">
+        <div className="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-mono-data text-slate-700">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span suppressHydrationWarning>{time || "LIVE"}</span>
           <span className="text-[9px] text-slate-400">IST</span>
@@ -262,20 +266,26 @@ function DashboardNav() {
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer border bg-white border-slate-200 text-slate-800 shadow-xs hover:border-slate-300"
+            title="User role & clearance"
           >
-            <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-[#4F46E5]">
+            <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-[#2563EB]">
               <User size={12} />
             </div>
-            <span className="hidden md:inline font-medium">{role}</span>
+            <span className="hidden sm:inline font-medium">{role}</span>
+            {role === "Auditor" && (
+              <span className="text-[9px] font-mono-data bg-amber-50 border border-amber-200 text-amber-700 font-bold px-1.5 py-0.2 rounded">
+                Read-Only
+              </span>
+            )}
             <ChevronDown size={11} className="text-slate-400" />
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 mt-1.5 rounded-2xl p-1.5 min-w-[200px] z-50 shadow-xl border border-slate-200 bg-white/95 backdrop-blur-xl">
+            <div className="absolute right-0 mt-1.5 rounded-2xl p-1.5 min-w-[210px] z-50 shadow-xl border border-slate-200 bg-white/95 backdrop-blur-xl">
               <div className="px-2.5 py-1 text-[10px] uppercase font-mono-data text-slate-400 font-bold border-b border-slate-100 mb-1">
-                Operator Clearance
+                Access Clearance
               </div>
-              {(["Chief Dispatcher", "Operator", "Field Unit", "Admin"] as UserRole[]).map((r) => (
+              {(["Operator", "Supervisor", "Auditor", "Admin"] as UserRole[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => {
@@ -284,12 +294,19 @@ function DashboardNav() {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
                     role === r
-                      ? "bg-indigo-50 text-[#4F46E5] font-semibold"
+                      ? "bg-indigo-50 text-[#2563EB] font-semibold"
                       : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <span>{r}</span>
-                  {role === r && <ShieldCheck size={13} className="text-[#4F46E5]" />}
+                  <div className="flex items-center gap-1.5">
+                    <span>{r}</span>
+                    {r === "Auditor" && (
+                      <span className="text-[9px] font-mono-data text-amber-600 bg-amber-50 px-1 rounded">
+                        No Write
+                      </span>
+                    )}
+                  </div>
+                  {role === r && <ShieldCheck size={13} className="text-[#2563EB]" />}
                 </button>
               ))}
             </div>
@@ -302,13 +319,55 @@ function DashboardNav() {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   useSimulatedSocket();
+  const presenterMode = useDashboardStore((s) => s.presenterMode);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col selection:bg-[#6366F1]/20 selection:text-[#4338CA]">
+    <div className={`min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col selection:bg-[#2563EB]/20 selection:text-[#1D4ED8] ${
+      presenterMode ? "text-sm scale-[1.01] transition-transform" : ""
+    }`}>
       <DashboardNav />
-      <main className="flex-1 p-3 md:p-4 overflow-hidden relative ambient-light-bg">
+
+      {/* Mobile/Responsive sub-bar for smaller screens */}
+      <div className="xl:hidden flex items-center gap-2 overflow-x-auto px-4 py-2 bg-slate-100/90 border-b border-slate-200 text-xs font-semibold scrollbar-none">
+        {[
+          { href: "/dashboard", label: "Live Network" },
+          { href: "/dashboard/trajectory", label: "Trajectory Search" },
+          { href: "/dashboard/analytics", label: "City Analytics" },
+          { href: "/dashboard/integrity", label: "Integrity & Evidence" },
+          { href: "/dashboard/demo", label: "Demo Tools" },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 whitespace-nowrap shadow-2xs hover:text-[#2563EB]"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+
+      <main className="flex-1 p-3 md:p-4 overflow-hidden relative">
         {children}
       </main>
+
+      {/* Honest Provenance Disclaimer Footer */}
+      <footer className="px-4 py-2 border-t border-slate-200 bg-white/70 backdrop-blur-md flex items-center justify-between text-[11px] font-mono-data text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          <span>TrackSure Multi-Camera ANPR Engine (PS 26127)</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-600 font-semibold">Recorded demo feed. Attacks are simulated.</span>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 text-slate-400">
+          <span>YOLOv11 Detection</span>
+          <span>·</span>
+          <span>ByteTrack Multi-Target</span>
+          <span>·</span>
+          <span>Consensus OCR</span>
+          <span>·</span>
+          <span>Ed25519 Signed Chains</span>
+        </div>
+      </footer>
     </div>
   );
 }

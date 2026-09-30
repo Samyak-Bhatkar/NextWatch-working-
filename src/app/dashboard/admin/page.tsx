@@ -125,10 +125,10 @@ function CamerasTab() {
                   <div className="flex items-center gap-1.5 text-[11px] font-mono-data">
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        cam.status === "online" ? "bg-[#10B981] animate-live-pulse" : "bg-[#FF3B30]"
+                        cam.healthStatus === "HEALTHY" || cam.status === "online" ? "bg-[#10B981] animate-live-pulse" : "bg-[#FF3B30]"
                       }`}
                     />
-                    <span className="capitalize text-white">{cam.status}</span>
+                    <span className="capitalize text-white">{cam.healthStatus || cam.status || "HEALTHY"}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -383,17 +383,17 @@ export default function AdminPage() {
     "cameras"
   );
 
-  if (role !== "Admin" && role !== "Chief Dispatcher") {
+  if (role !== "Admin" && role !== "Supervisor") {
     return (
       <div
         className="flex flex-col items-center justify-center h-[60vh] gap-4"
       >
         <Shield size={48} className="text-[#FF3B30] animate-pulse" />
         <h2 className="text-lg font-semibold text-white">
-          Admin / Chief Dispatcher Access Required
+          Admin / Supervisor Access Required
         </h2>
         <p className="text-xs text-center max-w-sm text-gray-400 font-mono-data">
-          Switch your active clearance role to Admin or Chief Dispatcher using the top navigation switcher to access node configuration and security controls.
+          Switch your active clearance role to Admin or Supervisor using the top navigation switcher to access node configuration and security controls.
         </p>
       </div>
     );
