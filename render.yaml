@@ -4,7 +4,7 @@ services:
     name: tracksure-backend
     runtime: docker
     dockerfilePath: Dockerfile.backend
-    plan: starter        # Starter plan required — YOLO/OpenCV need >512MB RAM
+    plan: free           # Free plan works — demo mode has no YOLO/OpenCV deps
     region: oregon
     healthCheckPath: /
     envVars:

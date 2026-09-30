@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,9 +9,17 @@ from backend.database import Base, engine
 from backend.routes.alerts import router as alerts_router
 from backend.routes.cameras import router as cameras_router
 from backend.routes.websocket import router as ws_router
-from backend.routes.live_stream import router as live_stream_router
-from backend.routes.camera_ingest import router as camera_ingest_router
 from backend.services.detection_service import start_detection_loop
+
+# In DEMO_MODE, skip importing live_stream and camera_ingest routers
+# — they have top-level cv2/ultralytics imports that require heavy ML packages
+_DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() in ["1", "true", "yes"]
+if not _DEMO_MODE:
+    from backend.routes.live_stream import router as live_stream_router
+    from backend.routes.camera_ingest import router as camera_ingest_router
+else:
+    live_stream_router = None
+    camera_ingest_router = None
 
 logging.basicConfig(
     level=logging.INFO,
@@ -119,9 +128,12 @@ app.add_middleware(
 # Register API Routers
 app.include_router(cameras_router, prefix=settings.API_V1_PREFIX)
 app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
-app.include_router(live_stream_router, prefix=settings.API_V1_PREFIX)
-app.include_router(camera_ingest_router)
 app.include_router(ws_router)
+# Live stream and camera ingest routers are only registered when not in DEMO_MODE
+if live_stream_router is not None:
+    app.include_router(live_stream_router, prefix=settings.API_V1_PREFIX)
+if camera_ingest_router is not None:
+    app.include_router(camera_ingest_router)
 
 @app.get("/")
 def root():
