@@ -231,9 +231,11 @@ export function VideoDetectionCanvas({
         ctx.restore();
 
         // Header Tag
-        const hasPlate = Boolean(det.plate);
+        const rawPlate = det.plate;
+        const hasPlate = Boolean(rawPlate && rawPlate !== "reading...");
+        const displayPlate = hasPlate ? rawPlate : null;
         const tagH = hasPlate ? 26 : 16;
-        const tagW = Math.max(135, hasPlate ? 145 : 110);
+        const tagW = Math.max(145, hasPlate ? (displayPlate!.length * 7.5 + 75) : 110);
         const tagY = Math.max(16, boxY - tagH - 2);
 
         // Tag background
@@ -255,26 +257,49 @@ export function VideoDetectionCanvas({
         ctx.fillText(`${det.speed_kmh} km/h`, boxX + tagW - 44, tagY + 9);
 
         // Line 2: Plate OCR
-        if (hasPlate) {
+        if (hasPlate && displayPlate) {
           ctx.font = "bold 8px 'JetBrains Mono', monospace";
-          ctx.fillStyle = "#FFFFFF";
+          ctx.fillStyle = "#E2E8F0";
           ctx.fillText("PLATE: ", boxX + 4, tagY + 21);
 
-          if (det.plate === "reading...") {
+          ctx.fillStyle = isWatchlistHit ? "#EF4444" : "#38BDF8";
+          ctx.font = "bold 8.5px 'JetBrains Mono', monospace";
+          ctx.fillText(displayPlate, boxX + 38, tagY + 21);
+
+          if (det.plate_conf) {
             ctx.fillStyle = "#94A3B8";
-            ctx.fillText("reading...", boxX + 38, tagY + 21);
-          } else {
-            ctx.fillStyle = isWatchlistHit ? "#EF4444" : "#38BDF8";
-            ctx.fillText(det.plate || "", boxX + 38, tagY + 21);
-            if (det.plate_conf) {
-              ctx.fillStyle = "#64748B";
-              ctx.font = "6.5px 'JetBrains Mono', monospace";
-              ctx.fillText(
-                `(${(det.plate_conf * 100).toFixed(0)}%)`,
-                boxX + 106,
-                tagY + 21
-              );
-            }
+            ctx.font = "7px 'JetBrains Mono', monospace";
+            const confPct = Math.round(det.plate_conf * 100);
+            ctx.fillText(
+              `(${confPct}%)`,
+              boxX + 38 + displayPlate.length * 6.0 + 4,
+              tagY + 21
+            );
+          }
+
+          // Dedicated ANPR Plate Reticle on Vehicle Bumper for prominent cars
+          if (boxW > 70 && boxH > 60) {
+            const pltW = Math.min(boxW * 0.44, 100);
+            const pltH = Math.min(boxH * 0.16, 22);
+            const pltX = boxX + (boxW - pltW) / 2;
+            const pltY = boxY + boxH * 0.74;
+
+            ctx.save();
+            ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+            ctx.strokeStyle = isWatchlistHit ? "#EF4444" : "#10B981"; // green or red
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.roundRect(pltX, pltY, pltW, pltH, 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Plate label on bumper
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "bold 7px 'JetBrains Mono', monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(displayPlate, pltX + pltW / 2, pltY + pltH / 2);
+            ctx.restore();
           }
         }
 
