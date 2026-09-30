@@ -53,5 +53,8 @@ env/
 *.log
 # Large raw videos (prevent GitHub push rejection on files > 100MB)
 public/videos/*_cfr.mp4
-public/videos/Tracksure-Video*.mp4
+# Allow Video1st (68MB landing page BG) - block unused larger ones
+public/videos/Tracksure-Video2nd.mp4
+public/videos/Tracksure-Video3rd.mp4
+public/videos/Tracksure-Video4th.mp4
 reports/debug/
