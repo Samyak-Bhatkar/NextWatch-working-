@@ -58,11 +58,18 @@ function DashboardNav() {
     }
     tick();
     const id = setInterval(tick, 1000);
+    if (typeof window !== "undefined") {
+      (window as any).__tracksureStore = useDashboardStore;
+      (window as any).__injectClonedPlate = () => useDashboardStore.getState().injectClonedPlate();
+      (window as any).__resetDemo = () => useDashboardStore.getState().resetDemo();
+      (window as any).__setEnhancement = (mode: EnhancementMode) => useDashboardStore.getState().setEnhancementMode(mode);
+    }
     return () => clearInterval(id);
   }, []);
 
   const navLinks = [
     { href: "/dashboard", label: "Live Network" },
+    { href: "/dashboard/events", label: "Live Events Feed" },
     { href: "/dashboard/trajectory", label: "Trajectory Search" },
     { href: "/dashboard/analytics", label: "City Analytics" },
     { href: "/dashboard/integrity", label: "Integrity & Evidence" },
@@ -70,7 +77,7 @@ function DashboardNav() {
   ];
 
   const enhancementOptions: { mode: EnhancementMode; label: string; desc: string }[] = [
-    { mode: "off", label: "Enhancement: Off", desc: "Native optical raw pixels" },
+    { mode: "off", label: "Enhancement: Normal", desc: "Native optical raw pixels" },
     { mode: "adaptive", label: "Adaptive CLAHE", desc: "Auto-contrast for low-light crops" },
     { mode: "night", label: "Night Sensor Boost", desc: "Gamma correction & noise floor filtering" },
     { mode: "fog", label: "Dehaze / Defog", desc: "Dark channel prior transmission recovery" },

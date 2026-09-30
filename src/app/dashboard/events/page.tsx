@@ -39,6 +39,7 @@ import {
 import { useDashboardStore } from "@/lib/store";
 import { Alert, AlertEventType, AlertSeverity } from "@/lib/types";
 import { getEventLabel } from "@/lib/mock-data";
+import { getEnhancementFilter, getEnhancementLabel } from "@/lib/enhancement";
 
 /* ═══════════════════════════════════════════════════════════════════════
    TYPES & DATA MODELS
@@ -148,6 +149,7 @@ function getBackendBaseUrl(): string {
 
 export default function LiveStreamPage() {
   const addGlobalAlert = useDashboardStore((s) => s.addAlert);
+  const enhancementMode = useDashboardStore((s) => s.enhancementMode);
 
   // Stream Source Mode
   const [streamMode, setStreamMode] = useState<StreamMode>("mobile_push");
@@ -935,11 +937,23 @@ export default function LiveStreamPage() {
         ref={containerRef}
         className="relative rounded-3xl overflow-hidden border border-slate-300/80 bg-black shadow-xl flex flex-col items-center justify-center min-h-[480px] lg:min-h-[580px]"
       >
+        {/* Real-time Optical / CLAHE Enhancement HUD Badge */}
+        {enhancementMode !== "off" && (
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-amber-400 text-amber-300 font-mono-data text-xs font-bold shadow-lg backdrop-blur-md animate-in fade-in duration-200">
+            <Sparkles size={13} className="text-amber-400 animate-pulse" />
+            <span>{getEnhancementLabel(enhancementMode)}</span>
+          </div>
+        )}
+
         {/* Stream Canvas */}
         {streamMode === "mobile_push" && (
           <img
             src={`${getBackendBaseUrl()}/api/live/feed`}
             alt="Mobile Push Live Stream"
+            style={{
+              filter: getEnhancementFilter(enhancementMode),
+              transition: "filter 0.35s ease-in-out",
+            }}
             className="w-full h-full object-contain max-h-[640px]"
             onError={() => setIpWebcamStatus("error")}
             onLoad={() => setIpWebcamStatus("streaming")}
@@ -950,6 +964,10 @@ export default function LiveStreamPage() {
           <img
             src={ipWebcamUrl}
             alt="Mobile Live Stream"
+            style={{
+              filter: getEnhancementFilter(enhancementMode),
+              transition: "filter 0.35s ease-in-out",
+            }}
             className="w-full h-full object-contain max-h-[640px]"
             onError={() => setIpWebcamStatus("error")}
             onLoad={() => setIpWebcamStatus("streaming")}
@@ -962,6 +980,10 @@ export default function LiveStreamPage() {
             autoPlay
             playsInline
             muted
+            style={{
+              filter: getEnhancementFilter(enhancementMode),
+              transition: "filter 0.35s ease-in-out",
+            }}
             className="w-full h-full object-contain max-h-[640px]"
           />
         )}
@@ -975,6 +997,10 @@ export default function LiveStreamPage() {
             muted
             loop={isLoop}
             onTimeUpdate={handleTimeUpdate}
+            style={{
+              filter: getEnhancementFilter(enhancementMode),
+              transition: "filter 0.35s ease-in-out",
+            }}
             className="w-full h-full object-contain max-h-[640px]"
           />
         )}
