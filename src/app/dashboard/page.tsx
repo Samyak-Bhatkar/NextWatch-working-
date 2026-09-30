@@ -709,7 +709,6 @@ function EvidenceDetailDrawer({
                       ? "/videos/cam4_tracked.mp4"
                       : "/videos/cam1_tracked.mp4")
                   }
-                  }
                   type="video/mp4"
                 />
               </video>
