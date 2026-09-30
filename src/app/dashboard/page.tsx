@@ -322,6 +322,21 @@ function CameraTile({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   ALERT SNAPSHOT HELPER (Resolves actual extracted frame snapshot)
+   ═══════════════════════════════════════════════════════════════════════ */
+function getAlertSnapshot(alert: AlertItem): string {
+  if (alert.cropUrl) return alert.cropUrl;
+  if (alert.snapshotUrl && !alert.snapshotUrl.endsWith(".mp4")) return alert.snapshotUrl;
+  if (alert.plate === "MH31CB8061" || alert.cameraId === "CAM-001") return "/snapshots/alert_cam1_mh31cb8061.jpg";
+  if (alert.plate === "MH31CB8064") return "/snapshots/alert_cam3_mh31cb8064.jpg";
+  if (alert.plate === "MH31EQ4892") return "/snapshots/alert_cam3_mh31eq4892.jpg";
+  if (alert.cameraId === "CAM-002") return "/snapshots/alert_cam2_ftt117.jpg";
+  if (alert.cameraId === "CAM-003") return "/snapshots/alert_cam3_mh31cb8064.jpg";
+  if (alert.cameraId === "CAM-004") return "/snapshots/alert_cam4_ap05jeo.jpg";
+  return "/snapshots/sample.jpg";
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    ALERT CARD COMPONENT (Review, Reject, Confirm, Notify)
    ═══════════════════════════════════════════════════════════════════════ */
 function AlertCard({
@@ -359,15 +374,18 @@ function AlertCard({
     >
       <div className="flex gap-2.5 items-start">
         {/* Keyframe Snapshot Preview */}
-        <div className="relative w-16 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-900 border border-slate-200 shadow-xs">
+        <div className="relative w-16 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-900 border border-slate-200 shadow-xs group-hover:border-cyan-400 transition-colors">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/snapshots/sample.jpg"
+            src={getAlertSnapshot(alert)}
             alt="Incident keyframe snapshot"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = "/snapshots/sample.jpg";
+            }}
           />
           {alert.trackId && (
-            <span className="absolute bottom-0.5 right-1 text-[7.5px] font-mono-data text-white font-bold bg-black/60 px-1 rounded">
+            <span className="absolute bottom-0.5 right-1 text-[7.5px] font-mono-data text-white font-bold bg-black/70 backdrop-blur-xs px-1 rounded shadow-xs">
               {alert.trackId}
             </span>
           )}
@@ -506,13 +524,43 @@ function EvidenceDetailDrawer({
           </div>
 
           <div className="p-5 space-y-5 flex-1 font-mono-data text-xs">
-            {/* Keyframe Crops */}
+            {/* Keyframe Crops & Live CCTV Playback */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden bg-black shadow-md relative aspect-video">
               <video autoPlay loop muted playsInline className="w-full h-full object-cover">
-                <source src={alert.snapshotUrl || "/videos/Tracksure-Video1st.mp4"} type="video/mp4" />
+                <source
+                  src={
+                    alert.videoUrl ||
+                    (alert.snapshotUrl && alert.snapshotUrl.endsWith(".mp4")
+                      ? alert.snapshotUrl
+                      : alert.cameraId === "CAM-002"
+                      ? "/videos/cam2_cfr.mp4"
+                      : alert.cameraId === "CAM-003"
+                      ? "/videos/cam3_cfr.mp4"
+                      : alert.cameraId === "CAM-004"
+                      ? "/videos/cam4_cfr.mp4"
+                      : "/videos/cam1_cfr.mp4")
+                  }
+                  type="video/mp4"
+                />
               </video>
+              <div className="absolute top-2 right-2 bg-black/75 px-2 py-0.5 rounded text-[10px] text-white flex items-center gap-1.5 font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                LIVE CCTV
+              </div>
               <div className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] text-white">
                 Best Laplacian Sharpness Crop ({alert.cameraName})
+              </div>
+              {/* Picture-in-picture captured vehicle frame */}
+              <div className="absolute bottom-2 right-2 w-28 h-18 rounded-lg overflow-hidden border border-white/50 shadow-lg bg-slate-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getAlertSnapshot(alert)}
+                  alt="Vehicle crop"
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-0 right-0 bg-black/80 text-[7px] text-cyan-300 font-bold px-1 rounded-tl">
+                  EVIDENCE CROP
+                </span>
               </div>
             </div>
 

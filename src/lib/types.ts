@@ -159,6 +159,8 @@ export interface AlertItem {
   trustScore?: number;
   reason: string;
   snapshotUrl: string;
+  cropUrl?: string;
+  videoUrl?: string;
   evidenceRecordId?: string;
   unitNotified?: {
     unitName: string;

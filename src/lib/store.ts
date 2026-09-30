@@ -262,7 +262,7 @@ const DEFAULT_TRAJECTORY: VehicleTrajectory = {
       directionHeading: 160,
       evidenceRecordId: "EVD-REC-001",
       snapshotUrl: "/videos/Tracksure-Video1st.mp4",
-      cropUrl: "/snapshots/sample.jpg",
+      cropUrl: "/snapshots/alert_cam1_mh31cb8061.jpg",
       ocrVotes: [
         { engine: "PaddleOCR-v4", predictedPlate: "MH31CB8061", confidence: 0.96, normalizedPlate: "MH31CB8061" },
         { engine: "TrOCR-PlateSmall", predictedPlate: "MH31CB8061", confidence: 0.94, normalizedPlate: "MH31CB8061" },
@@ -286,7 +286,7 @@ const DEFAULT_TRAJECTORY: VehicleTrajectory = {
       directionHeading: 175,
       evidenceRecordId: "EVD-REC-002",
       snapshotUrl: "/videos/Tracksure-Video2nd.mp4",
-      cropUrl: "/snapshots/sample.jpg",
+      cropUrl: "/snapshots/alert_cam2_ftt117.jpg",
       ocrVotes: [
         { engine: "PaddleOCR-v4", predictedPlate: "MH31CB8061", confidence: 0.94, normalizedPlate: "MH31CB8061" },
         { engine: "TrOCR-PlateSmall", predictedPlate: "MH31CB8061", confidence: 0.91, normalizedPlate: "MH31CB8061" },
@@ -310,7 +310,7 @@ const DEFAULT_TRAJECTORY: VehicleTrajectory = {
       directionHeading: 210,
       evidenceRecordId: "EVD-REC-003",
       snapshotUrl: "/videos/Tracksure-Video3rd.mp4",
-      cropUrl: "/snapshots/sample.jpg",
+      cropUrl: "/snapshots/alert_cam3_mh31cb8064.jpg",
       ocrVotes: [
         { engine: "PaddleOCR-v4", predictedPlate: "MH31CB8061", confidence: 0.92, normalizedPlate: "MH31CB8061" },
         { engine: "TrOCR-PlateSmall", predictedPlate: "MH31CB8061", confidence: 0.89, normalizedPlate: "MH31CB8061" },
@@ -377,7 +377,9 @@ const DEFAULT_ALERTS: AlertItem[] = [
     trackId: "C1-T1",
     trustScore: 0.94,
     reason: "Plate matched active user-defined Demo Watchlist entry (PCR 12) with 0.94 consensus confidence across tracking window.",
-    snapshotUrl: "/videos/cam1_cfr.mp4",
+    snapshotUrl: "/snapshots/alert_cam1_mh31cb8061.jpg",
+    cropUrl: "/snapshots/alert_cam1_mh31cb8061.jpg",
+    videoUrl: "/videos/cam1_cfr.mp4",
     evidenceRecordId: "EVD-REC-001",
   },
   {
@@ -394,7 +396,9 @@ const DEFAULT_ALERTS: AlertItem[] = [
     trackId: "C3-T3",
     trustScore: 0.68,
     reason: "Character similarity score 0.68 on ambiguous plate suffix; requires operator validation before dispatch.",
-    snapshotUrl: "/videos/cam3_cfr.mp4",
+    snapshotUrl: "/snapshots/alert_cam3_mh31cb8064.jpg",
+    cropUrl: "/snapshots/alert_cam3_mh31cb8064.jpg",
+    videoUrl: "/videos/cam3_cfr.mp4",
     evidenceRecordId: "EVD-REC-003",
   },
   {
@@ -411,7 +415,9 @@ const DEFAULT_ALERTS: AlertItem[] = [
     trackId: "C3-T2",
     trustScore: 0.92,
     reason: "Vehicle stationary in primary active transit lane for > 40 seconds; measured speed 0.0 km/h with high tracking confidence.",
-    snapshotUrl: "/videos/cam3_cfr.mp4",
+    snapshotUrl: "/snapshots/alert_cam3_mh31eq4892.jpg",
+    cropUrl: "/snapshots/alert_cam3_mh31eq4892.jpg",
+    videoUrl: "/videos/cam3_cfr.mp4",
     evidenceRecordId: "EVD-REC-004",
   },
   {
@@ -426,7 +432,9 @@ const DEFAULT_ALERTS: AlertItem[] = [
     roadGraphNodeId: "RN-104",
     trustScore: 0.95,
     reason: "NTP clock skew deviation of +18ms detected and resynchronised by edge telemetry.",
-    snapshotUrl: "/videos/cam4_cfr.mp4",
+    snapshotUrl: "/snapshots/alert_cam4_ap05jeo.jpg",
+    cropUrl: "/snapshots/alert_cam4_ap05jeo.jpg",
+    videoUrl: "/videos/cam4_cfr.mp4",
     confirmedBy: "Supervisor Desk",
     confirmedAt: "2026-09-30T07:16:30.000Z",
   },
@@ -447,7 +455,7 @@ const DEFAULT_EVIDENCE_CHAIN: EvidenceRecord[] = [
     signatureStatus: "verified",
     signerKeyId: "ed25519-edge-node-cam001",
     snapshotUrl: "/videos/Tracksure-Video1st.mp4",
-    cropUrl: "/snapshots/sample.jpg",
+    cropUrl: "/snapshots/alert_cam1_mh31cb8061.jpg",
     metadata: {
       roadNodeId: "RN-101",
       speedKmph: 46.2,
@@ -478,7 +486,7 @@ const DEFAULT_EVIDENCE_CHAIN: EvidenceRecord[] = [
     signatureStatus: "verified",
     signerKeyId: "ed25519-edge-node-cam002",
     snapshotUrl: "/videos/Tracksure-Video2nd.mp4",
-    cropUrl: "/snapshots/sample.jpg",
+    cropUrl: "/snapshots/alert_cam2_ftt117.jpg",
     metadata: {
       roadNodeId: "RN-102",
       speedKmph: 49.5,
@@ -509,7 +517,7 @@ const DEFAULT_EVIDENCE_CHAIN: EvidenceRecord[] = [
     signatureStatus: "verified",
     signerKeyId: "ed25519-edge-node-cam003",
     snapshotUrl: "/videos/Tracksure-Video3rd.mp4",
-    cropUrl: "/snapshots/sample.jpg",
+    cropUrl: "/snapshots/alert_cam3_mh31cb8064.jpg",
     metadata: {
       roadNodeId: "RN-103",
       speedKmph: 47.8,
@@ -540,7 +548,7 @@ const DEFAULT_EVIDENCE_CHAIN: EvidenceRecord[] = [
     signatureStatus: "verified",
     signerKeyId: "ed25519-edge-node-cam003",
     snapshotUrl: "/videos/Tracksure-Video3rd.mp4",
-    cropUrl: "/snapshots/sample.jpg",
+    cropUrl: "/snapshots/alert_cam3_mh31eq4892.jpg",
     metadata: {
       roadNodeId: "RN-103",
       speedKmph: 2.1,

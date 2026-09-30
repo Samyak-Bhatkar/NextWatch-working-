@@ -54,3 +54,4 @@ env/
 # Large raw videos (prevent GitHub push rejection on files > 100MB)
 public/videos/*_cfr.mp4
 public/videos/Tracksure-Video*.mp4
+reports/debug/
