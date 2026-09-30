@@ -3,10 +3,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system libraries needed by OpenCV and Python build tools
+# Install system libraries needed by OpenCV headless and Python build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgl1 \
     libglib2.0-0 \
     libgomp1 \
     curl \
@@ -17,11 +16,13 @@ COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r ./backend/requirements.txt
 
-# Copy backend application source
+# Copy backend application source only (model files are excluded via .dockerignore)
 COPY backend/ ./backend/
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
+# Default to demo mode — no real DB or camera stream needed
+ENV DEMO_MODE=true
 
 EXPOSE 8000
 

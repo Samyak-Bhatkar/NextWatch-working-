@@ -1,30 +1,33 @@
 services:
-  # ── 1. PostgreSQL Database on Render ──────────────────────────────
-  # (Render provides a free/starter Managed PostgreSQL database)
-  
-  # ── 2. FastAPI Backend Web Service ────────────────────────────────
+  # ── 1. FastAPI Backend Web Service ────────────────────────────────
   - type: web
-    name: cityeye-backend
+    name: tracksure-backend
     runtime: docker
     dockerfilePath: Dockerfile.backend
-    plan: free
+    plan: starter        # Starter plan required — YOLO/OpenCV need >512MB RAM
     region: oregon
     healthCheckPath: /
     envVars:
       - key: PORT
         value: 8000
-      - key: DATABASE_URL
-        fromDatabase:
-          name: cityeye-db
-          property: connectionString
+      - key: DEMO_MODE
+        value: "true"
       - key: CORS_ORIGINS
-        value: https://cityeye-frontend.onrender.com,http://localhost:3000
+        value: "https://tracksure-frontend.onrender.com,http://localhost:3000"
       - key: WS_BROADCAST_INTERVAL_SEC
-        value: 10
+        value: "10"
+      # No DATABASE_URL — running without PostgreSQL in demo mode
+      # Twilio disabled — no real credentials needed for demo
+      - key: TWILIO_AUTO_DISPATCH
+        value: "false"
+      - key: TWILIO_ACCOUNT_SID
+        value: ""
+      - key: TWILIO_AUTH_TOKEN
+        value: ""
 
-  # ── 3. Next.js Frontend Web Service ───────────────────────────────
+  # ── 2. Next.js Frontend Web Service ───────────────────────────────
   - type: web
-    name: cityeye-frontend
+    name: tracksure-frontend
     runtime: docker
     dockerfilePath: Dockerfile.frontend
     plan: free
@@ -33,11 +36,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_WS_URL
-        value: wss://cityeye-backend.onrender.com/ws/alerts
-
-databases:
-  - name: cityeye-db
-    plan: free
-    region: oregon
-    databaseName: cityeye
-    user: cityeye_user
+        value: wss://tracksure-backend.onrender.com/ws/alerts
+      - key: NEXT_PUBLIC_API_URL
+        value: https://tracksure-backend.onrender.com

@@ -12,3 +12,19 @@ venv
 .venv
 *.log
 .DS_Store
+
+# Exclude large ML model files from Docker build context
+# (YOLO models are downloaded at runtime if needed, or use DEMO_MODE=true)
+*.pt
+*.weights
+*.onnx
+data/
+reports/
+models/
+scripts/
+test_cv2.mp4
+TrackSure_Prototype_Demo_Video.mp4
+surveillance_event_activity.log
+
+# PDF assets not needed in container
+*.pdf
