@@ -17,6 +17,7 @@ export const cameras: Camera[] = [
     bearing: 145,
     fovAngle: 78,
     lensType: "Varifocal 4.8-120mm PTZ",
+    trackedSrc: "/videos/cam1_tracked.mp4",
     integrityChecks: {
       freezeDetected: false,
       loopDetected: false,
@@ -41,6 +42,7 @@ export const cameras: Camera[] = [
     bearing: 42,
     fovAngle: 90,
     lensType: "Wide Fixed 2.8mm",
+    trackedSrc: "/videos/cam2_tracked.mp4",
     integrityChecks: {
       freezeDetected: false,
       loopDetected: false,
@@ -65,6 +67,7 @@ export const cameras: Camera[] = [
     bearing: 260,
     fovAngle: 85,
     lensType: "Motorized 3.6-11mm",
+    trackedSrc: "/videos/cam3_tracked.mp4",
     integrityChecks: {
       freezeDetected: false,
       loopDetected: false,
@@ -90,6 +93,7 @@ export const cameras: Camera[] = [
     fovAngle: 110,
     lensType: "Panoramic 180° Multi-sensor",
     sourceType: "cctv",
+    trackedSrc: "/videos/cam4_tracked.mp4",
     integrityChecks: {
       freezeDetected: false,
       loopDetected: false,
